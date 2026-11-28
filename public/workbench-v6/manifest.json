@@ -11,7 +11,7 @@
   },
   "generator": {
     "path": "scripts/package-workbench.py",
-    "sha256": "53dee1634d54827feca8fa8c9a7de4a3af551e881fa107421f5eff6e4a60381f"
+    "sha256": "aec5a2c7a97de909a1350fa5460ed78c6a251d505b3a1112952f1cb2fe6a19e6"
   },
   "modules": {
     "song": {
@@ -291,8 +291,8 @@
     },
     "yoga": {
       "file": "yoga.html",
-      "sha256": "13be2270e253970763445591f6c1fe8b0d2df0c1ca5a2eb23da762dbd0b90827",
-      "bytes": 6488864,
+      "sha256": "d80f2af2c5a5a082ee682d22f28d8b8330b0959e8e5210330a9900c732ede816",
+      "bytes": 6493371,
       "extractedDocument": {
         "sha256": "580890f00d665a5ee678c4642cc0a438f5530023d0cb7aa0fe19afb46dcf931d",
         "bytes": 6406089
@@ -415,8 +415,8 @@
         "localFiles": [
           {
             "path": "workbench-ui/yoga/model.js",
-            "sha256": "3f1a14d4b1355b21238c106bc1abbb65556249da1d7520ae1afac4219d7e16fa",
-            "bytes": 2888216
+            "sha256": "40d1c6a5a8fdbe350604f4f926db8e6fb7d9c977f429c356061ad3ce1be24d21",
+            "bytes": 2890475
           },
           {
             "path": "workbench-ui/yoga/library.js",
@@ -425,8 +425,8 @@
           },
           {
             "path": "workbench-ui/yoga/app.js",
-            "sha256": "d62843c30fa96052134ae2cc6e12a7c8bc6ec3b7394a26ce27108dfadeb0e394",
-            "bytes": 1681914
+            "sha256": "7436f569070aa01777aea20eb3e59f59fdf6c01b93eb326a802049994096d0ee",
+            "bytes": 1682382
           },
           {
             "path": "workbench-ui/yoga/wonder-case.js",
@@ -445,8 +445,8 @@
           },
           {
             "path": "workbench-ui/yoga/wonder-scene.js",
-            "sha256": "f0072a356e9f0baf840b91ce9282f79eee54b55b7945c8fe43ba9ae58daf3f4f",
-            "bytes": 5026
+            "sha256": "da658469c3482192f2e7dcdb4e94ff060d652a98dcf86378ce7ced21359defbe",
+            "bytes": 5054
           },
           {
             "path": "workbench-ui/yoga/wonder-scene.css",
@@ -614,10 +614,16 @@
           "bytes": 12344
         },
         {
+          "file": "yoga-course-scene.js",
+          "source": "workbench-ui/yoga/course-scene.js",
+          "sha256": "5795c47d5c5a64146a2b000f3a68235759558ef987f18a9eaa2daa8427eb3128",
+          "bytes": 11560
+        },
+        {
           "file": "yoga-existing-backend.js",
           "source": "workbench-ui/yoga/existing-backend.js",
-          "sha256": "c5486bc707121f911f3cec657e81e599c00c5ef431b3d4f1cbc975e89373a761",
-          "bytes": 15804
+          "sha256": "258b28694e3afbf3323ed177a03954b7eb94230884637a4ae743524882576ca0",
+          "bytes": 15512
         }
       ]
     }
@@ -1228,8 +1234,8 @@
     "move-match"
   ],
   "totals": {
-    "generatedFilesExcludingManifest": 127,
-    "bytesExcludingManifest": 97297334,
+    "generatedFilesExcludingManifest": 128,
+    "bytesExcludingManifest": 97313109,
     "inlineSyntaxChecks": 48,
     "storageLiteralReplacements": 18
   },
@@ -1247,10 +1253,16 @@
       "bytes": 12344
     },
     {
+      "file": "yoga-course-scene.js",
+      "source": "workbench-ui/yoga/course-scene.js",
+      "sha256": "5795c47d5c5a64146a2b000f3a68235759558ef987f18a9eaa2daa8427eb3128",
+      "bytes": 11560
+    },
+    {
       "file": "yoga-existing-backend.js",
       "source": "workbench-ui/yoga/existing-backend.js",
-      "sha256": "c5486bc707121f911f3cec657e81e599c00c5ef431b3d4f1cbc975e89373a761",
-      "bytes": 15804
+      "sha256": "258b28694e3afbf3323ed177a03954b7eb94230884637a4ae743524882576ca0",
+      "bytes": 15512
     }
   ]
 }

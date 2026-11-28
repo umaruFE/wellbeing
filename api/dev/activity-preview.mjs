@@ -44,13 +44,16 @@ const generationPaths = new Set([
   '/api/ai/generate-course',
   '/api/ai/regenerate-phase',
   '/api/ai/generate-images',
+  '/api/ai/generate-ppt-asset',
   '/api/ai/generate-storyboard',
   '/api/ai/generate-video',
   '/api/ai/generate-voice',
   '/api/ai/generate-audio',
 ]);
 
-const app = next({ dev: true, dir: appDirectory, hostname: host, port });
+// API templates and local media are resolved from the application directory.
+process.chdir(appDirectory);
+const app = next({ dev: true, dir: process.cwd(), hostname: host, port });
 const handle = app.getRequestHandler();
 await app.prepare();
 

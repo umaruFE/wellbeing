@@ -9,7 +9,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { getPromptPair } from '@/prompts/registry';
 import { loadWikiPage } from '@/lib/prompt-library';
-import { YOGA_POSE_LIBRARY_TEXT, findYogaPose } from '@/lib/experience/yogaPoses';
+import { YOGA_POSES, YOGA_POSE_LIBRARY_TEXT, findYogaPose } from '@/lib/experience/yogaPoses';
 import { generateWithDeepSeek } from '@/lib/n8n/deepseek';
 
 export interface YogaPage {
@@ -258,20 +258,37 @@ export async function generateYogaDesign(
   plan?: YogaPlan | null
 ): Promise<{ title: string; pages: YogaPage[] }> {
   const vars = yogaVars(params);
+  const requested = new Set((params.supportedMotionPoses || '').split(',').map(name => name.trim()));
+  const poses = YOGA_POSES.filter(pose => requested.has(pose.en));
+  if (requested.size && params.supportedMotionPoses && !poses.length) throw new Error('没有可演示的体式，请重新打开备课页。');
+  const poseNames = poses.map(pose => pose.en);
   const base = await getPromptPair(
     'experience-yoga-design',
-    { poseLibrary: YOGA_POSE_LIBRARY_TEXT },
+    { poseLibrary: poses.length ? poses.map(pose => `${pose.en}（${pose.zh}｜${pose.body}）`).join(' / ') : YOGA_POSE_LIBRARY_TEXT },
     { ...vars, plan: planSummary(plan) }
   );
   const { system, user } = { system: await withSpecDocs(base.system, 'content', 'poseLibrary'), user: base.user };
-  const raw = await callLLM(system, user);
-  const parsed = parseJson<{ title?: string; pages?: YogaPage[] }>(raw);
-
-  const pages = Array.isArray(parsed.pages) ? parsed.pages : [];
-  validateYogaPages(pages);
+  const sceneContract = poses.length
+    ? `\n本课使用独立的角色动作层。action 页的 pose 必须逐字选择以下可演示的体式：${poseNames.join('、')}。return 页仅在可选列表含 Savasana 时可选它，其余非动作页为 null。教师提示、故事动作和字幕均须与选中的动作一致。imagePrompt 专门用于无字背景层，仅写本课的环境、故事道具、光线和远近构图，可画情节所需的动物。留出前景地面放置角色；人物、引导角色、体式、动作箭头和标题由播放器叠加。\n`
+    : '';
+  const generate = async (correction = '') => {
+    const raw = await callLLM(system + sceneContract, user + correction);
+    const parsed = parseJson<{ title?: string; pages?: YogaPage[] }>(raw);
+    const pages = Array.isArray(parsed.pages) ? parsed.pages : [];
+    validateYogaPages(pages);
+    return { title: parsed.title, pages };
+  };
+  const unsupported = (pages: YogaPage[]) => poses.length && pages.some(page =>
+    page.type === 'action' ? !poseNames.includes(page.pose || '') :
+      page.pose && !(page.type === 'return' && page.pose === 'Savasana' && poseNames.includes(page.pose)));
+  let parsed = await generate();
+  if (unsupported(parsed.pages)) {
+    parsed = await generate('\n上一次返回了播放器无法示范的体式。请使用可演示体式列表中的英文全名重新编排，并同步动作口令。');
+    if (unsupported(parsed.pages)) throw new Error('编排结果含有尚无角色示范的体式，请重新生成。');
+  }
 
   const title = parsed.title || plan?.storyTitleEn || params.theme || params.title || '情境瑜伽活动';
-  return { title, pages: normalizeYogaPages(pages) };
+  return { title, pages: normalizeYogaPages(parsed.pages) };
 }
 
 /** 导出给生图链路：按英文名取体式的身体反应描述（找不到返回空串） */

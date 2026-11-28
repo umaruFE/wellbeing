@@ -144,7 +144,7 @@ test('a case preview does not retry or discard an unrelated failed editor save',
   assert.equal(page.unloadBlocked(), true);
 });
 
-function previewStore(request) {
+function previewStore(request, generateImage) {
   const values = new Map([['token', 'session'], ['wellbeing-workbench-tab', 'tab']]);
   const storage = {
     getItem: key => values.get(key) ?? null,
@@ -154,12 +154,32 @@ function previewStore(request) {
   const context = vm.createContext({
     localStorage: storage, sessionStorage: storage,
     addEventListener() {}, clearTimeout() {}, setTimeout() {},
-    WBWorkbenchApi: { readOnly: true, request },
+    WBWorkbenchApi: { readOnly: true, request, generateImage },
   });
   context.window = context;
   for (const script of [goals, modelScript, libraryScript, backendScript]) script.runInContext(context);
   return { library: context.YogaLibrary, model: context.YogaModel, open: context.YogaExistingBackend.createStore, values };
 }
+
+test('a yoga scene uses the environment workflow and keeps the teaching pose in the live character layer', async () => {
+  let submitted;
+  const source = '/api/media/oss?path=generated%2Fforest.png';
+  const { open } = previewStore(() => assert.fail('unexpected storyboard request'), async (body, options) => {
+    submitted = { body, signal: options.signal };
+    return source;
+  });
+  const course = { title: 'Evening delivery', settings: { characterId: 'poppy' } };
+  const page = { title: 'Balance', scene: 'A lantern by a hollow tree.', english: 'Can you balance?', actionId: 'tree' };
+  const { signal } = new AbortController();
+  assert.equal(await open().background(course, page, 'Use dusk light', signal), source);
+  assert.equal(submitted.signal, signal);
+  assert.equal(submitted.body.workflow_type, 'yoga-backdrop');
+  assert.equal(submitted.body.guide, 'poppy');
+  assert.equal(submitted.body.prompt, page.scene);
+  assert.equal(submitted.body.scene_changes, 'Use dusk light');
+  assert.equal(submitted.body.width / submitted.body.height, 16 / 9);
+  assert.equal(submitted.body.character_name, undefined);
+});
 
 test('the yoga production preview waits for its backend write capability and leaves earlier local drafts alone', async () => {
   let canWrite = false;

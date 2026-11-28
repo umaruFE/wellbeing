@@ -20,7 +20,13 @@
     { id: 'star', name: '星星式', english: 'Star', instruction: 'Open your arms and legs like a star.', short: 'Be a star.', teacher: '示范舒展的星星形状，学生边模仿边说目标句。' },
     { id: 'butterfly', name: '蝴蝶式', english: 'Butterfly', instruction: 'Sit down and make a butterfly pose.', short: 'Be a butterfly.', teacher: '示范坐姿蝴蝶，等待学生准备好后再做语言互动。' }
   ].map(action => Object.freeze({ ...action, demo: true })));
-  const ACTIONS = Object.freeze([...LEGACY_ACTIONS, ...(Wonder ? Wonder.actions.map(action => Object.freeze({ ...action, demo: true })) : [])]);
+  const BACKEND_ACTIONS = Object.freeze([
+    ...LEGACY_ACTIONS.map(action => ({ ...action, pose: action.english + ' Pose' })),
+    { id:'garland', name:'花环式', english:'Garland Pose', pose:'Garland Pose (Malasana)', instruction:'Bend your knees and lower into a comfortable squat.', short:'Squat down slowly.', teacher:'双脚分开，膝盖顺着脚尖方向弯曲，示范缓缓蹲下。' },
+    { id:'savasana', name:'仰卧放松式', english:'Savasana', pose:'Savasana', instruction:'Lie on your back and breathe softly.', short:'Rest and breathe.', teacher:'引导孩子仰卧，手臂自然放在身体两侧，轻轻呼吸。' },
+  ].map(Object.freeze));
+  const supportedMotionPoses = Object.freeze(BACKEND_ACTIONS.map(action => action.pose));
+  const ACTIONS = Object.freeze([...BACKEND_ACTIONS, ...(Wonder ? Wonder.actions.map(action => Object.freeze({ ...action, demo: true })) : [])]);
   const DEFAULT_SETTINGS = Object.freeze({ title: '森林里的身体探险', theme: '森林探险', age: '5–7 岁', duration: 8,
     context: '和伙伴进入森林，寻找树、星星和蝴蝶。', goal: '理解并使用目标词句，在情境中跟随动作并进行英语表达。',
     words: ['tree', 'bird', 'star', 'butterfly'], sentence: 'I can see a ...', characterId: 'poppy' });
@@ -90,7 +96,10 @@
     if (!Wonder || Wonder.templateId !== WONDER_TEMPLATE_ID || !Array.isArray(Wonder.pages) || Wonder.pages.length !== 11) fail('新版瑜伽案例资源未完整加载，请刷新后重试。');
     return Wonder;
   }
-  function getAvailableActions(value) { return isWonderCourse(value) ? requireWonder().actions : LEGACY_ACTIONS; }
+  function getAvailableActions(value) {
+    if (isWonderCourse(value)) return requireWonder().actions;
+    return (value?.draft || value)?.backend ? BACKEND_ACTIONS : LEGACY_ACTIONS;
+  }
   function getAvailableCharacters(value) { return isWonderCourse(value) ? [requireWonder().character] : LEGACY_CHARACTERS; }
   function wonderPage(page) {
     if (!page?.wonder || page.wonder.templateId !== WONDER_TEMPLATE_ID) return null;
@@ -271,8 +280,25 @@
     } catch (_) { return ''; }
   }
   function actionForPose(pose) {
-    const name = String(pose ?? '').trim().toLowerCase();
-    return LEGACY_ACTIONS.find(action => [action.id, action.name, action.english.toLowerCase(), action.english.toLowerCase()+' pose'].includes(name));
+    const name = String(pose ?? '').normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
+    const aliases = { tadasana:'mountain', vrksasana:'tree', vrikshasana:'tree', '星式':'star', malasana:'garland', 'baddha konasana':'butterfly', shavasana:'savasana', 'corpse pose':'savasana', '摊尸式':'savasana' };
+    return BACKEND_ACTIONS.find(action => action.id === aliases[name] ||
+      [action.id,action.name,action.english,action.pose].some(label => label.toLowerCase() === name));
+  }
+  function pageAction(page) {
+    return page.kind === 'action' ? getAction(page.actionId) || actionForPose(page.backendPose) : null;
+  }
+  // Call on a new or cloned draft. Published snapshots keep their original media URLs.
+  function attachBackendMotion(course) {
+    if (!course.backend) return course;
+    for (const page of course.pages) {
+      const action = pageAction(page);
+      if (!action) continue;
+      page.actionId = action.id;
+      page.assets.motion = 'ready';
+      page.assetSources.motion = sourceStamp(course,page,'motion');
+    }
+    return course;
   }
   function useBackendCourse(state, input, data) {
     const normalized = normalizeSettings(generationSettings({...input,title:String(data.title||input.title||'').slice(0,70)},true),true);
@@ -282,13 +308,14 @@
     const result = clone(state);
     const draft = {backend:true,title:normalized.title,settings:normalized,themeKey:themeKey(normalized.theme,true),pages:[],revision:nextRevision(state),confirmed:false,locked:false,demo:false};
     draft.pages = pages.map((raw,index) => {
-      const kind = index===0?'cover':index===pages.length-1?'ending':raw.type==='action'?'action':'intro';
+      const hasPose = raw.type === 'action' || (raw.type === 'return' && actionForPose(raw.pose));
+      const kind = index===0?'cover':index===pages.length-1?'ending':hasPose?'action':'intro';
       const backendPose = kind==='action' ? String(raw.pose||'').trim().slice(0,100) : '';
       const actionId = kind==='action' ? actionForPose(backendPose)?.id || null : null;
       const english = String(raw.subtitle||'').trim();
       if (!english) fail('后台返回了缺少英语字幕的页面。');
       const backgroundUrl = safeMediaUrl(raw.img);
-      const page = {id:`page-${index+1}`,kind,actionId,backendPose,look:'soft',englishMode:'full',
+      const page = {id:`page-${index+1}`,kind,actionId,backendPose,...(raw.type==='return'?{backendType:'return'}:{}),look:'soft',englishMode:'full',
         title:String(raw.title||backendPose||(kind==='cover'?normalized.title:kind==='ending'?'回顾与结束':`第 ${index+1} 页`)).slice(0,100),
         english,story:String(raw.action||raw.teacherLang||english),scene:String(raw.imagePrompt||raw.expression||normalized.context),
         teacher:String(raw.teacherLang||raw.action||english),focus:kind==='action'?normalized.words[(index-1)%normalized.words.length]:'',
@@ -296,6 +323,7 @@
       if (backgroundUrl) { page.backgroundUrl=backgroundUrl; page.assetSources.background=sourceStamp(draft,page,'background'); }
       return page;
     });
+    attachBackendMotion(draft);
     validateCourse(draft);
     result.draft=draft;result.settings=clone(normalized);result.candidate=null;delete result.undo;result.lastJob=null;
     return result;
@@ -332,8 +360,12 @@
       if (change.field === 'title') result.title = change.after;
     }
     if (candidate.themeKey) result.themeKey = candidate.themeKey;
-    for (const change of candidate.changes) findPage(result, change.pageId)[change.field] = clone(change.after);
-    return result;
+    for (const change of candidate.changes) {
+      const page = findPage(result, change.pageId);
+      page[change.field] = clone(change.after);
+      if (result.backend && change.field === 'actionId') page.backendPose = getAction(change.after)?.pose || '';
+    }
+    return attachBackendMotion(result);
   }
   function impactsBetween(before, after) {
     return before.pages.map(page => {
@@ -429,7 +461,9 @@
       if (!pages.length) fail('封面和结尾不安排主动作，请选择一个动作页。');
       pages.forEach(original => {
         const page = findPage(after, original.id); page.actionId = action.id;
-        page.title = page.wonder ? action.name : page.title.replace(/·.*/, `· ${action.name}`);
+        if (page.wonder) page.title = action.name;
+        else if (after.backend && actionForPose(page.title)) page.title = action.pose;
+        else page.title = page.title.replace(/·.*/, `· ${action.name}`);
         page.english = actionEnglish(after.settings, page, page.englishMode);
         page.teacher = teacherText(after.settings, page);
       });
@@ -659,7 +693,7 @@
     if (!state.published) fail('还没有可复制的授课版本。');
     if (state.draft && !state.draft.locked) fail('当前已有可编辑草稿，请先完成或保留该草稿。');
     if (state.job || state.candidate) fail('请先处理当前生成任务和修改候选。');
-    const result = clone(state); result.draft = clone(state.published.course);
+    const result = clone(state); result.draft = attachBackendMotion(clone(state.published.course));
     result.draft.locked = false; result.draft.revision = nextRevision(state); result.settings = clone(result.draft.settings); result.lastJob = null;
     delete result.undo;
     return result;
@@ -705,7 +739,7 @@
       const expectedKind = index === 0 ? 'cover' : index === draft.pages.length-1 ? 'ending' : draft.backend===true&&page.kind==='intro'?'intro':'action';
       if (page.kind !== expectedKind || typeof page.id !== 'string' || !page.id || !['soft', 'bright'].includes(page.look)) fail('保存的页面类型或显示设置无效。');
       for (const field of ['title', 'english', 'story', 'scene', 'teacher']) if (typeof page[field] !== 'string' || !page[field].trim()) fail('页面的英语、情境或教师引导不完整。');
-      const localPose=LEGACY_ACTIONS.some(action => action.id === page.actionId);
+      const localPose=getAvailableActions(draft).some(action => action.id === page.actionId);
       if (page.kind === 'action' ? (!localPose&&!(draft.backend===true&&page.actionId===null)) || !page.focus : page.actionId !== null) fail('动作页必须匹配一个演示动作，封面和结尾不设置动作。');
       if (!['full', 'short'].includes(page.englishMode)) fail('保存的英语指令模式无效。');
       for (const kind of KINDS) {
@@ -729,7 +763,7 @@
     const courseFields = ['title', 'settings', 'themeKey', 'pages', 'revision', 'confirmed', 'locked', 'demo', ...(isWonderCourse(before) ? ['templateId'] : []), ...(before.backend===true?['backend']:[])];
     const pageFields = ['id', 'kind', ...FIELD_NAMES, 'assets', 'assetSources', ...(isWonderCourse(before) ? ['wonder'] : [])];
     const settingsExact=value=>exact(value,[...Object.keys(DEFAULT_SETTINGS),...['languageGoals','voiceId','musicId','musicVolume','musicUpload','templateId'].filter(key=>Object.prototype.hasOwnProperty.call(value||{},key))]);
-    if (!exact(before, courseFields) || !settingsExact(undo.before.settings) || !settingsExact(before.settings) || !Array.isArray(before.pages) || before.pages.some(page => !exact(page, [...pageFields,...['backendPose','backgroundUrl','voiceUrl'].filter(field=>Object.prototype.hasOwnProperty.call(page,field))]) || !exact(page.assets, KINDS) || !exact(page.assetSources, KINDS))) fail('保存的撤销快照结构不完整。');
+    if (!exact(before, courseFields) || !settingsExact(undo.before.settings) || !settingsExact(before.settings) || !Array.isArray(before.pages) || before.pages.some(page => !exact(page, [...pageFields,...['backendPose','backendType','backgroundUrl','voiceUrl'].filter(field=>Object.prototype.hasOwnProperty.call(page,field))]) || !exact(page.assets, KINDS) || !exact(page.assetSources, KINDS))) fail('保存的撤销快照结构不完整。');
     validateCourse(before);
     if (before.locked || before.revision >= undo.appliedRevision || !equal(undo.before.settings, before.settings) || !equal(before.pages.map(page => [page.id, page.kind]), state.draft.pages.map(page => [page.id, page.kind]))) fail('保存的撤销快照与当前课程不一致。');
     for (const page of before.pages) for (const kind of KINDS) {
@@ -793,5 +827,5 @@
       fail('保存的数据结构不完整或格式无效，请保留原数据后重新开始。');
     }
   }
-  return { MUSIC_TRACKS, musicOptions, selectMusic, VOICES, selectVoice, languageGoals:LanguageGoals.read, mergeLanguageGoals:LanguageGoals.merge, clone, ACTIONS, CHARACTERS, WONDER_TEMPLATE_ID, createState, createWonderState, getAvailableActions, getAvailableCharacters, generateCourse, useBackendCourse, proposeBackendChange, actionForPose, safeMediaUrl, proposeChange, applyCandidate, editContent, applyBackgroundCandidate, canUndo, undoLastChange, discardCandidate, confirmContent, startAssets, finishAssets, cancelJob, publish, forkDraft, restoreVersion, readiness, validateState };
+  return { MUSIC_TRACKS, musicOptions, selectMusic, VOICES, selectVoice, languageGoals:LanguageGoals.read, mergeLanguageGoals:LanguageGoals.merge, clone, ACTIONS, CHARACTERS, WONDER_TEMPLATE_ID, createState, createWonderState, getAvailableActions, getAvailableCharacters, generateCourse, useBackendCourse, proposeBackendChange, actionForPose, pageAction, supportedMotionPoses, attachBackendMotion, safeMediaUrl, proposeChange, applyCandidate, editContent, applyBackgroundCandidate, canUndo, undoLastChange, discardCandidate, confirmContent, startAssets, finishAssets, cancelJob, publish, forkDraft, restoreVersion, readiness, validateState };
 });

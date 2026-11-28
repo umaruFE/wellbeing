@@ -8,7 +8,15 @@
   const rowsUrl=`${collection}?moduleId=${moduleId}`;
   const clone=value=>JSON.parse(JSON.stringify(value));
   const clean=value=>String(value??'').replace(/</g,'＜');
-  const speechVoices={gentle:'en-US-JennyNeural',bright:'en-US-AriaNeural',calm:'en-US-GuyNeural'};
+  const speechVoices={gentle:'淡雅女声',bright:'活力女声',calm:'沉稳男声'};
+
+  function backgroundRequest(course,page,overrides='') {
+    return {
+      workflow_type:'yoga-backdrop', width:2048, height:1152, count:1,
+      prompt:page.scene, scene_changes:overrides, course_title:course.title,
+      title:page.title, guide:course.settings.characterId,
+    };
+  }
 
   function workParams(record) {
     const settings=record.state.draft?.settings||record.workspace.form||record.state.settings;
@@ -16,12 +24,14 @@
       theme:settings.theme||'',age:settings.age||'',duration:`${parseFloat(settings.duration)||8}分钟`,
       goals:[settings.goal,...M.languageGoals(settings)].filter(Boolean).join('\n'),
       requirements:[settings.context,settings.sentence,`编排时使用 ${settings.characterId||'Poppy'} 作为引导角色。`].filter(Boolean).join('\n'),
+      ...(!record.state.draft?.templateId ? { supportedMotionPoses: M.supportedMotionPoses } : {}),
       workbenchYoga:record,
     };
   }
   function oldPage(page,index) {
-    const pose=M.ACTIONS.find(action=>action.id===page.actionId)?.english||page.backendPose||null;
-    const type={cover:'scene',ending:'ending',intro:'transition',action:'action'}[page.kind];
+    const action=M.pageAction(page);
+    const pose=action?.pose||action?.english||page.backendPose||null;
+    const type=page.backendType==='return'&&(!action||action.id==='savasana')?'return':{cover:'scene',ending:'ending',intro:'transition',action:'action'}[page.kind];
     const image=M.safeMediaUrl(page.backgroundUrl);
     return {id:page.id,page:index+1,type,pose,subtitle:clean(page.english),teacherLang:clean(page.teacher),
       expression:clean(page.story),action:clean(page.story),imagePrompt:clean(page.scene),node:page.kind==='action'?'🌿':'✦',...(image&&page.assets.background==='ready'?{img:clean(image)}:{})};
@@ -174,24 +184,11 @@
       if(!Array.isArray(data?.pages))throw Error('后台返回的课程设计缺少页面。');
       return {...data,plan};
     }
-    function background(course,page,overrides,signal){
-      const pose=M.ACTIONS.find(action=>action.id===page.actionId)?.english||page.backendPose;
-      const instruction=[`Guided yoga adventure illustration, ${course.title}.`,page.scene,overrides,
-        pose?`Clearly demonstrate this pose with child-appropriate instruction: ${pose}.`:'Show the story atmosphere.',
-        'Watercolor picture book illustration, completely text-free. No captions or watermarks.'].filter(Boolean).join(' ');
-      const index=course.pages.findIndex(p=>p.id===page.id)+1;
-      return request('/api/ai/generate-ppt-asset',{method:'POST',signal,body:{assetType:'image',assetCode:'B9',assetName:'情境瑜伽插图',prompt:instruction,
-        options:{imageRatio:'16:9',imageStyle:'Watercolor Picture Book',negativePrompt:'letters, text, captions, watermark',referenceNotes:instruction,
-          batchItems:[{page:index,pageType:oldPage(page,index-1).type,title:page.title,imagePrompt:page.scene,visibleEnglishText:'',prompt:instruction}],
-          rawValues:{storybookTitle:course.title,storybookContent:page.english,storybookStyle:'Watercolor Picture Book',storybookGrade:course.settings.age}}}})
-        .then(result=>resolveAsset(result.asset||result.assets?.[0]||result,signal));
-    }
-    async function resolveAsset(asset,signal){
-      const pick=value=>M.safeMediaUrl(value?.url||value?.assetUrl||value?.imageUrl||value?.data?.url||value?.asset?.url);
-      const direct=pick(asset);if(direct)return direct;
-      const statusUrl=asset?.statusUrl||asset?.asset?.statusUrl;
-      if(typeof statusUrl!=='string'||!statusUrl.startsWith('/api/'))throw Error('后台未返回图片任务。');
-      return poll(statusUrl,pick,signal);
+    async function background(course,page,overrides,signal){
+      const url=await api.generateImage(backgroundRequest(course,page,overrides),{signal});
+      const saved=M.safeMediaUrl(url);
+      if(!saved)throw Error('后台图片尚未保存为可播放的素材。');
+      return saved;
     }
     async function poll(path,pick,signal){
       for(let attempt=0;attempt<100;attempt++){
@@ -209,7 +206,7 @@
       const pick=value=>M.safeMediaUrl(value?.url||value?.audioUrl||value?.data?.url);
       const direct=pick(result);if(direct)return direct;
       if(!result.executionId)throw Error('后台未返回配音任务。');
-      return poll('/api/ai/generate-voice?executionId='+encodeURIComponent(result.executionId),pick,signal);
+      return poll('/api/ai/generate-voice?persist=true&executionId='+encodeURIComponent(result.executionId),pick,signal);
     }
     async function reloadLatest(id){
       await findRow(id);
@@ -225,9 +222,26 @@
 
   function createPlayer(options={}) {
     const browser=window.YogaPlayback.createPlayer(options);
-    let audio=null, state='idle', message='', progress=0;
+    let audio=null, state='idle', message='', progress=0, frame=null;
     function status(next,detail=''){state=next;message=detail;options.onStatus?.({state,message,progress});}
+    function stopClock(){
+      if(frame!==null)window.cancelAnimationFrame(frame);
+      frame=null;
+    }
+    function syncProgress(player){
+      if(audio!==player||!(player.duration>0))return;
+      progress=Math.min(1,player.currentTime/player.duration);
+      options.onProgress?.(progress);
+    }
+    function startClock(player){
+      stopClock();
+      if(!options.onProgress||!window.requestAnimationFrame)return;
+      const tick=()=>{if(audio!==player||player.paused||player.ended){frame=null;return;}
+        syncProgress(player);frame=window.requestAnimationFrame(tick);};
+      frame=window.requestAnimationFrame(tick);
+    }
     function stop(){
+      stopClock();
       if(!audio){browser.stop();return;}
       const previous=audio;audio=null;previous.pause();previous.removeAttribute('src');previous.load();progress=0;
       options.onProgress?.(0);status('idle');
@@ -237,11 +251,11 @@
       const src=M.safeMediaUrl(voiceOptions.source||options.getSource?.());
       if(!src)return browser.play(text,voiceOptions);
       const player=new Audio(src);audio=player;status('starting');
-      player.onplaying=()=>{if(audio===player)status('playing');};
-      player.onpause=()=>{if(audio===player&&!player.ended)status('paused','已暂停');};
-      player.ontimeupdate=()=>{if(audio===player&&player.duration>0){progress=player.currentTime/player.duration;options.onProgress?.(progress);}};
-      player.onended=()=>{if(audio===player){progress=1;options.onProgress?.(1);status('ended','本页配音已结束。');options.onEnd?.();}};
-      player.onerror=()=>{if(audio===player)status('error','后台配音无法播放，请重新生成或重试。');};
+      player.onplaying=()=>{if(audio===player){status('playing');startClock(player);}};
+      player.onpause=()=>{if(audio===player&&!player.ended){stopClock();status('paused','已暂停');}};
+      player.ontimeupdate=()=>{if(frame===null)syncProgress(player);};
+      player.onended=()=>{if(audio===player){stopClock();progress=1;options.onProgress?.(1);status('ended','本页配音已结束。');options.onEnd?.();}};
+      player.onerror=()=>{if(audio===player){stopClock();status('error','后台配音无法播放，请重新生成或重试。');}};
       try{await player.play();return audio===player;}catch(_){if(audio===player)status('error','后台配音无法播放，请重试。');return false;}
     }
     return {play,replay:play,stop,pause(){if(audio)audio.pause();else browser.pause();},
@@ -249,5 +263,5 @@
       destroy(){stop();browser.destroy();},getState(){return audio?{state,message,progress}:browser.getState();}};
   }
 
-  window.YogaExistingBackend={createStore,createPlayer};
+  window.YogaExistingBackend={createStore,createPlayer,backgroundRequest};
 })();

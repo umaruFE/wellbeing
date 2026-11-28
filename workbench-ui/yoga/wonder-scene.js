@@ -43,7 +43,7 @@
       heading = escape(page.english); caption = '';
     }
     return `<section class="yoga-scene yoga-wonder yw-${escape(spec.kind)}${page.kind === 'action' ? ' yw-action' : ''}${options.compact ? ' yw-compact' : ''}${page.look === 'bright' ? ' yw-bright' : ''}${!unchangedAction ? ' yw-custom-pose' : ''}${!unchangedCopy && page.kind !== 'action' ? ' yw-edited-copy' : ''}" data-yoga-scene data-wonder-source="${spec.source}" aria-label="${escape(page.title)}">
-      ${backgroundMarkup(page, settings, spec)}${heading ? `<h2 class="yw-headline" lang="en">${heading}</h2>` : ''}<div class="yw-mat" aria-hidden="true"></div>${actorMarkup(actor)}
+      ${options.backgroundMarkup || backgroundMarkup(page, settings, spec)}${heading ? `<h2 class="yw-headline" lang="en">${heading}</h2>` : ''}<div class="yw-mat" aria-hidden="true"></div>${actorMarkup(actor)}
       ${caption ? `<p class="yw-caption${spec.longCaption || page.english.length > 120 ? ' long' : ''}" lang="en">${caption}</p>` : ''}</section>`;
   }
   function renderBackground(page, settings) {

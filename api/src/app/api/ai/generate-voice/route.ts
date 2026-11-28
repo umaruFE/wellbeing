@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { authenticate } from '@/lib/auth';
+import { uploadFile } from '@/lib/fileUpload';
 import { n8nClient } from '@/lib/n8n/client';
 import { audioFiles, mediaSubmissionFailure } from '@/lib/n8n/media';
 
@@ -22,6 +24,22 @@ function corsHeaders() {
 
 export async function OPTIONS() {
   return NextResponse.json({}, { headers: corsHeaders() });
+}
+
+async function saveVoiceRecording(source: string): Promise<string> {
+  if (/^\/(?:uploads\/|api\/media\/)/.test(source)) return source;
+  const url = new URL(source);
+  if (url.origin !== new URL(n8nClient.baseUrl).origin || url.pathname !== '/webhook/files') {
+    if (url.protocol === 'https:') return source;
+    throw new Error('配音工作流未返回可保存的音频地址');
+  }
+  const filename = url.searchParams.get('file') || '';
+  if (!/^[\w.-]+\.flac$/i.test(filename)) throw new Error('配音文件名无效');
+  const audio = await fetch(url, { redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(45000) });
+  if (!audio.ok) throw new Error('无法下载已生成的配音');
+  const bytes = Buffer.from(await audio.arrayBuffer());
+  if (bytes.subarray(0, 4).toString() !== 'fLaC') throw new Error('配音文件内容无效');
+  return uploadFile(bytes, 'generated-voice', filename);
 }
 
 /**
@@ -149,6 +167,10 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const executionId = searchParams.get('executionId');
+    const persist = searchParams.get('persist') === 'true';
+    if (persist && !authenticate(request).success) {
+      return NextResponse.json({ error: '请登录后保存配音' }, { status: 401, headers: corsHeaders() });
+    }
 
     if (!executionId) {
       return NextResponse.json(
@@ -180,7 +202,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
           success: true,
           status: 'completed',
-          url: file.url,
+          url: persist ? await saveVoiceRecording(file.url) : file.url,
           filename: file.filename
         }, { headers: corsHeaders() });
 

@@ -33,7 +33,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     }
     const input = await request.json().catch(() => null);
     const preview = input?.preview === true;
-    if (preview && input.requirements !== undefined && (typeof input.requirements !== 'string' || input.requirements.length > 16000)) {
+    if (preview && input.requirements != null && (typeof input.requirements !== 'string' || input.requirements.length > 16000)) {
       return NextResponse.json({ error: '调整要求无效或过长' }, { status: 400 });
     }
 

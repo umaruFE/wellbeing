@@ -38,6 +38,7 @@ function applyViewControls(container){
   }
 }
 const actionName=id=>(M.ACTIONS.find(a=>a.id===id)||{}).name||'无动作';
+const pageActionName=p=>M.pageAction(p)?.name||p.backendPose||(p.kind==='action'?'待选动作':'无动作');
 const characterName=id=>(M.CHARACTERS.find(a=>a.id===id)||{}).name||'Poppy';
 const current=()=>state.draft?.pages.find(p=>p.id===ui.pageId)||state.draft?.pages[0];
 const course=()=>state.draft;
@@ -430,7 +431,7 @@ function settingsView(){if(state.draft)return readonlySettings();return `<div cl
 function pagePending(p){return ['background','voice','motion'].map(kind=>({kind,status:pageAssetStatus(p,kind)})).filter(x=>!['ready','na'].includes(x.status));}
 function pagesNav(){
   const changed=new Set(recentChanges().map(x=>x.page.id));
-  return `<nav class="page-nav" aria-label="课程页面"><div class="nav-title"><span>课程页面</span><span>${state.draft.pages.length} 页</span></div>${state.draft.pages.map((p,i)=>{const pending=pagePending(p),st=pending.some(x=>x.status==='stale')?'stale':pending.length?'missing':'ready';return `<button class="page-item ${current().id===p.id?'active':''}" data-action="select-page" data-id="${p.id}" ${current().id===p.id?'aria-current="true"':''}><span class="page-number">${String(i+1).padStart(2,'0')}</span><span><strong>${E(p.title)}</strong><small class="page-meta">${p.kind==='cover'?'封面':p.kind==='ending'?'结尾':p.title.includes(actionName(p.actionId))?'':E(actionName(p.actionId))}<span class="page-status-label ${st}">${ui.step===3?{ready:'已齐备',stale:'待更新',missing:'待生成'}[st]:''}</span></small>${changed.has(p.id)?`<small class="page-change-label">${state.draft.confirmed?'最近修改':'修改待复核'}</small>`:''}</span></button>`;}).join('')}${ui.step===3&&state.draft.pages.some(p=>pagePending(p).length)?btn('下一待处理页 →','next-pending-page','quiet tiny fullwidth'):''}</nav>`;
+  return `<nav class="page-nav" aria-label="课程页面"><div class="nav-title"><span>课程页面</span><span>${state.draft.pages.length} 页</span></div>${state.draft.pages.map((p,i)=>{const pending=pagePending(p),st=pending.some(x=>x.status==='stale')?'stale':pending.length?'missing':'ready';return `<button class="page-item ${current().id===p.id?'active':''}" data-action="select-page" data-id="${p.id}" ${current().id===p.id?'aria-current="true"':''}><span class="page-number">${String(i+1).padStart(2,'0')}</span><span><strong>${E(p.title)}</strong><small class="page-meta">${p.kind==='cover'?'封面':p.kind==='ending'?'结尾':p.title.includes(pageActionName(p))?'':E(pageActionName(p))}<span class="page-status-label ${st}">${ui.step===3?{ready:'已齐备',stale:'待更新',missing:'待生成'}[st]:''}</span></small>${changed.has(p.id)?`<small class="page-change-label">${state.draft.confirmed?'最近修改':'修改待复核'}</small>`:''}</span></button>`;}).join('')}${ui.step===3&&state.draft.pages.some(p=>pagePending(p).length)?btn('下一待处理页 →','next-pending-page','quiet tiny fullwidth'):''}</nav>`;
 }
 function backgroundEditorOpen(p){return state.draft.confirmed&&!state.draft.locked&&(pageAssetStatus(p,'background')!=='ready'||ui.backgroundEditorPageId===p.id||!!backgroundPrompt(p.id));}
 function backgroundEditor(p){
@@ -456,9 +457,10 @@ function backgroundButton(p){
 function resourceAssetCard(p,kind,lock){
   const status=pageAssetStatus(p,kind),task=state.job?.tasks.find(task=>task.pageId===p.id&&task.kinds.includes(kind));
   const failed=state.lastJob?.status==='failed'&&state.lastJob.kinds?.includes(kind)&&state.lastJob.failedPageIds.includes(p.id)&&!['ready','na'].includes(status);
-  const label=task?(kind==='motion'?'加载中':'生成中'):failed?(kind==='motion'?'加载失败':'生成失败'):kind==='motion'?({missing:'待加载',stale:'待更新',ready:'已就绪',na:'无需配置'}[status]):statusText[status];
-  const action=kind==='background'?backgroundButton(p):status==='na'?'':btn('更换动作','change-action','secondary',adjustmentLocked()||!!state.candidate)+(!['ready','na'].includes(status)?btn(task?'加载中…':'加载动作','motion-generate','secondary',lock,'id="motion-generate"'):'');
-  return `<div class="asset-item asset-resource" id="asset-status-${kind}" tabindex="-1"><div class="asset-resource-heading"><div class="asset-symbol">${kind==='background'?'▧':'♧'}</div><div class="asset-main"><strong>${assetLabels[kind]}</strong>${kind==='motion'&&status!=='na'?`<p>${E(actionName(p.actionId))}</p>`:''}</div>${badge(label,status==='ready'?'dark':failed||status==='stale'?'amber':'gray')}</div>${kind==='background'?`<p class="background-scene">${E(p.scene)}</p>${backgroundEditor(p)}`:''}${action?`<div class="asset-resource-actions" ${kind==='background'?'id="background-card-action"':''}>${action}</div>`:''}</div>`;
+  const unsupported=kind==='motion'&&p.kind==='action'&&!M.pageAction(p);
+  const label=unsupported?'暂无对应示范':task?(kind==='motion'?'加载中':'生成中'):failed?(kind==='motion'?'加载失败':'生成失败'):kind==='motion'?({missing:'待加载',stale:'待更新',ready:'已就绪',na:'无需配置'}[status]):statusText[status];
+  const action=kind==='background'?backgroundButton(p):status==='na'&&!unsupported?'':btn('更换动作','change-action','secondary',adjustmentLocked()||!!state.candidate)+(!['ready','na'].includes(status)?btn(task?'加载中…':'加载动作','motion-generate','secondary',lock,'id="motion-generate"'):'');
+  return `<div class="asset-item asset-resource" id="asset-status-${kind}" tabindex="-1"><div class="asset-resource-heading"><div class="asset-symbol">${kind==='background'?'▧':'♧'}</div><div class="asset-main"><strong>${assetLabels[kind]}</strong>${kind==='motion'&&(status!=='na'||unsupported)?`<p>${E(pageActionName(p))}</p>`:''}</div>${badge(label,status==='ready'?'dark':failed||status==='stale'?'amber':'gray')}</div>${kind==='background'?`<p class="background-scene">${E(p.scene)}</p>${backgroundEditor(p)}`:''}${action?`<div class="asset-resource-actions" ${kind==='background'?'id="background-card-action"':''}>${action}</div>`:''}</div>`;
 }
 function backgroundProposal(base,prompt,pageId,allowUnchanged=false){
   // A cancelled first generation may already contain the visual settings.
@@ -510,7 +512,7 @@ function courseComposer(focus=true){
   const d=state.draft,busy=ui.busy?.kind==='candidate',lock=adjustmentLocked(),expanded=ui.adjustment.kind!=='course';
   const outlineOpen=window.matchMedia?.('(max-width: 760px)').matches?'':' open';
   const scope=expanded?`<strong>本页要求涉及整课核对</strong><p>原修改对象：${E(adjustmentTargetLabel())}。涉及课程设定或故事衔接时，需要核对整课；采用前仍需同意扩大范围。</p>`:`<strong>修改范围：整套课程 · ${d.pages.length} 页</strong>`;
-  const body=`<div class="course-adjustment-layout"><aside class="course-adjustment-overview"><h3>${E(d.title)}</h3><p class="course-adjustment-meta">${E(characterName(d.settings.characterId))} · ${E(d.settings.age)}</p><details class="course-adjustment-outline"${outlineOpen}><summary>课程结构</summary><ol class="course-adjustment-pages">${d.pages.map((p,i)=>`<li><span>${String(i+1).padStart(2,'0')}</span><div><strong>${E(p.title)}</strong><small>${p.kind==='action'?E(actionName(p.actionId)):p.kind==='cover'?'封面 · 无主动作':p.kind==='intro'?'故事引入 · 无主动作':'结尾 · 无主动作'}</small></div></li>`).join('')}</ol></details></aside><main class="course-adjustment-editor"><div class="course-adjustment-scope">${scope}</div>${busy?`<div class="course-adjustment-progress" role="status"><span class="spinner"></span><h3>正在整理整课修改候选</h3></div>`:''}<p class="adjustment-note">先核对修改候选与受影响素材，采用后再更新课程。</p><label class="adjustment-label unified-ai-label" for="course-prompt">调整要求</label><textarea id="course-prompt" aria-label="整课修改要求" rows="6" maxlength="600" placeholder="${d.templateId==='wonder-v2-2'?'例如：恢复整套课程的原稿英语':'例如：把森林故事改成海底探险，保持各页故事衔接和动作顺序'}" ${lock?'disabled':''}>${E(adjustmentPrompt())}</textarea><div class="suggestions">${adjustmentSuggestions('course').map(([name,value])=>btn(E(name),'adjustment-suggest','',lock,`data-value="${E(value)}"`)).join('')}</div>${ui.error?`<p class="inline-error" role="alert">${E(ui.error)}</p>`:''}${storageError?`<p class="inline-error" role="alert">${E(storageError)}</p>`:''}</main></div>`;
+  const body=`<div class="course-adjustment-layout"><aside class="course-adjustment-overview"><h3>${E(d.title)}</h3><p class="course-adjustment-meta">${E(characterName(d.settings.characterId))} · ${E(d.settings.age)}</p><details class="course-adjustment-outline"${outlineOpen}><summary>课程结构</summary><ol class="course-adjustment-pages">${d.pages.map((p,i)=>`<li><span>${String(i+1).padStart(2,'0')}</span><div><strong>${E(p.title)}</strong><small>${p.kind==='action'?E(pageActionName(p)):p.kind==='cover'?'封面 · 无主动作':p.kind==='intro'?'故事引入 · 无主动作':'结尾 · 无主动作'}</small></div></li>`).join('')}</ol></details></aside><main class="course-adjustment-editor"><div class="course-adjustment-scope">${scope}</div>${busy?`<div class="course-adjustment-progress" role="status"><span class="spinner"></span><h3>正在整理整课修改候选</h3></div>`:''}<p class="adjustment-note">先核对修改候选与受影响素材，采用后再更新课程。</p><label class="adjustment-label unified-ai-label" for="course-prompt">调整要求</label><textarea id="course-prompt" aria-label="整课修改要求" rows="6" maxlength="600" placeholder="${d.templateId==='wonder-v2-2'?'例如：恢复整套课程的原稿英语':'例如：把森林故事改成海底探险，保持各页故事衔接和动作顺序'}" ${lock?'disabled':''}>${E(adjustmentPrompt())}</textarea><div class="suggestions">${adjustmentSuggestions('course').map(([name,value])=>btn(E(name),'adjustment-suggest','',lock,`data-value="${E(value)}"`)).join('')}</div>${ui.error?`<p class="inline-error" role="alert">${E(ui.error)}</p>`:''}${storageError?`<p class="inline-error" role="alert">${E(storageError)}</p>`:''}</main></div>`;
   showDialog('AI 调整 · 整课',body,`${busy?btn('取消生成','cancel-ai','secondary'):btn('暂时关闭','close-dialog')+btn('生成整课修改候选','adjustment-propose','primary',lock||!adjustmentPrompt().trim())}`);
   ui.dialogMode='course-compose';$('#dialog').classList.add('course-adjustment-dialog');
   if(busy)$('[data-action="close-dialog"]').disabled=true;
@@ -539,7 +541,7 @@ function adjustmentCandidate(c){
   const linked=changes.some(x=>candidateLinked(x,c));
   const differences=changes.map(x=>{
     const page=state.draft.pages.find(p=>p.id===x.pageId),pageLabel=page?`第 ${state.draft.pages.indexOf(page)+1} 页 · ${page.title}`:'整课设定';
-    const pose=value=>x.field==='actionId'&&page?`<div class="adjustment-pose">${S.renderReference({...page,actionId:value},state.draft.settings)}</div>`:'';
+    const pose=value=>x.field==='actionId'&&page?`<div class="adjustment-pose">${renderReference({...page,actionId:value},state.draft.settings)}</div>`:'';
     return `<div class="adjustment-diff"><div class="row between"><h4>${E(fieldLabels[x.field]||x.field)}</h4>${candidateLinked(x,c)?badge('关联调整','gray'):''}</div>${c.scope==='course'||c.requiresExpansion?`<p class="adjustment-context">${E(pageLabel)}</p>`:''}<div class="unified-candidate-compare"><div class="adjustment-before"><small>当前内容</small><p>${E(valueText(x.field,x.before))}</p>${pose(x.before)}</div><div class="adjustment-after"><small>调整候选</small><p>${E(valueText(x.field,x.after))}</p>${pose(x.after)}</div></div></div>`;
   }).join('');
   return `<div class="adjustment-body" tabindex="0" aria-label="修改候选详情"><div class="row between"><h3>AI 调整 · 核对候选</h3>${badge(`${affected.size} 页受影响`,'gray')}</div><p class="adjustment-note">${E(c.summary)}</p>${c.requiresExpansion?'<div class="notice amber adjustment-mismatch">这项要求会影响整套课程，确认扩大范围后才会应用。</div>':''}${differences}<div class="adjustment-impact"><h4>素材影响</h4>${(c.impacts||[]).length?c.impacts.map(x=>`<p><strong>${E(state.draft.pages.find(p=>p.id===x.pageId)?.title||'整套课程')}</strong><span>${x.kinds.map(k=>assetLabels[k]).join('、')}需准备或更新</span></p>`).join(''):'<p>本次无需重新准备素材。</p>'}</div>${linked?'<p class="adjustment-note">关联内容将一起采用。</p>':''}${c.requiresExpansion?'<label class="checkbox"><input id="allow-expansion" type="checkbox">同意将修改范围扩大到整套课程</label>':''}${c.redirectToContent?'<label class="checkbox"><input id="allow-redirect" type="checkbox">返回内容编排，重新确认受影响内容</label>':''}</div><div class="adjustment-foot unified-candidate-actions"><div class="row">${btn('保留原内容','discard-candidate','quiet')}${btn('继续调整','refine-candidate','quiet')}</div>${btn(linked?'应用全部关联修改':'应用到当前页','apply-candidate','primary',!!c.requiresExpansion||!!c.redirectToContent)}</div>`;
@@ -562,7 +564,13 @@ function previewPanel(p){
   const waiting=background==='stale'?'背景需更新':'背景尚未生成';
   return `<section class="panel preview-card"><div class="preview-head"><h3>画面总览</h3></div><div class="scene-host">${background==='ready'?renderScene(p,state.draft.settings,{compact:true,showLabel:false}):`<div class="background-placeholder"><span aria-hidden="true">▧</span><h3>${waiting}</h3><p>${E(p.scene)}</p></div>`}</div><div class="preview-control">${btn('播放本页','preview-play','tiny',!ready,!ready?'title="本页素材尚未齐备"':'')}</div></section>`;
 }
-function pageAssetStatus(p,kind,ownerState=state){const report=M.readiness(ownerState);if(report.missing.some(x=>x.pageId===p.id&&x.kind===kind))return 'missing';if(report.stale.some(x=>x.pageId===p.id&&x.kind===kind))return 'stale';return p.assets[kind];}
+function pageAssetStatus(p,kind,ownerState=state){
+  if(kind==='motion'&&p.assets.motion==='na'&&ownerState.draft?.backend&&M.pageAction(p))return 'ready';
+  const report=M.readiness(ownerState);
+  if(report.missing.some(x=>x.pageId===p.id&&x.kind===kind))return 'missing';
+  if(report.stale.some(x=>x.pageId===p.id&&x.kind===kind))return 'stale';
+  return p.assets[kind];
+}
 function contentAssetNote(p){
   const background=pageAssetStatus(p,'background');
   const title=background==='stale'?'背景需更新':background==='missing'?'背景尚未生成':'';
@@ -571,22 +579,22 @@ function contentAssetNote(p){
 }
 function openActionPicker(){
   if(adjustmentLocked()||state.candidate||current()?.kind!=='action')return;
-  ui.actionPicker={courseId:activeId,pageId:current().id,revision:state.draft.revision,selectedId:current().actionId,proposal:null};
+  ui.actionPicker={courseId:activeId,pageId:current().id,revision:state.draft.revision,selectedId:M.pageAction(current())?.id||null,proposal:null};
   renderActionPicker();
 }
 function renderActionPicker(){
   const pick=ui.actionPicker,p=state.draft.pages.find(page=>page.id===pick?.pageId);if(!pick||!p)return;
-  const action=M.ACTIONS.find(a=>a.id===pick.selectedId),changed=pick.selectedId!==p.actionId;
+  const currentId=M.pageAction(p)?.id,action=M.ACTIONS.find(a=>a.id===pick.selectedId),changed=!!action&&action.id!==currentId;
   const fields=Object.fromEntries((pick.proposal?.candidate.changes||[]).filter(c=>c.pageId===p.id).map(c=>[c.field,c.after]));
   const preview={...p,...fields};
-  const body=`<div class="action-picker-layout"><div class="action-picker-options" role="group" aria-label="选择本页动作">${M.getAvailableActions(state).map(a=>btn(`<strong>${E(a.name)}</strong><span>${E(a.english)}</span>${a.id===p.actionId?'<small>当前动作</small>':''}`,'pick-action',`action-picker-option image-card${a.id===pick.selectedId?' active':''}`,false,`data-id="${a.id}" aria-pressed="${a.id===pick.selectedId}"`)).join('')}</div><div class="action-picker-preview"><h3>${E(action.name)} <small>${E(action.english)}</small></h3>${S.renderReference(preview,state.draft.settings)}<div class="action-picker-copy"><h4>${changed?'更换后的字幕':'字幕'}</h4><p class="english">${E(preview.english)}</p><h4>教学提示</h4><p>${E(preview.teacher)}</p></div></div></div><p class="hint">确认后同步更新本页动作、关联字幕与教学提示，配音和动作素材需更新。</p><p id="action-picker-error" class="inline-error" role="alert"></p>`;
+  const body=`<div class="action-picker-layout"><div class="action-picker-options" role="group" aria-label="选择本页动作">${M.getAvailableActions(state).map(a=>btn(`<strong>${E(a.name)}</strong><span>${E(a.english)}</span>${a.id===currentId?'<small>当前动作</small>':''}`,'pick-action',`action-picker-option image-card${a.id===pick.selectedId?' active':''}`,false,`data-id="${a.id}" aria-pressed="${a.id===pick.selectedId}"`)).join('')}</div><div class="action-picker-preview"><h3>${E(action?.name||p.backendPose||'请选择动作')} <small>${E(action?.english||'')}</small></h3>${action?renderReference({...preview,actionId:action.id},state.draft.settings):'<p>选择动作后可查看角色示范。</p>'}<div class="action-picker-copy"><h4>${changed?'更换后的字幕':'字幕'}</h4><p class="english">${E(preview.english)}</p><h4>教学提示</h4><p>${E(preview.teacher)}</p></div></div></div><p class="hint">确认后同步更新本页动作、关联字幕与教学提示，配音和动作素材需更新。</p><p id="action-picker-error" class="inline-error" role="alert"></p>`;
   showDialog('更换本页动作',body,btn('取消','close-dialog')+btn('确认更换','apply-action','primary',!changed));
   ui.dialogMode='action-picker';$('#dialog').classList.add('action-picker-dialog');
 }
 function selectAction(id){
   const pick=ui.actionPicker,p=state.draft?.pages.find(page=>page.id===pick?.pageId),action=M.ACTIONS.find(a=>a.id===id);
   if(!pick||!p||!action||adjustmentLocked()||state.candidate||pick.courseId!==activeId||pick.revision!==state.draft.revision)return;
-  try{pick.proposal=id===p.actionId?null:M.proposeChange(state,{channel:'content',scope:'page',pageId:p.id,target:'action',prompt:`把当前页主动作改为${action.name}`});pick.selectedId=id;renderActionPicker();}catch(error){$('#action-picker-error').textContent=error.message;}
+  try{pick.proposal=id===M.pageAction(p)?.id?null:M.proposeChange(state,{channel:'content',scope:'page',pageId:p.id,target:'action',prompt:`把当前页主动作改为${action.name}`});pick.selectedId=id;renderActionPicker();}catch(error){$('#action-picker-error').textContent=error.message;}
 }
 function applySelectedAction(){
   const pick=ui.actionPicker;
@@ -594,10 +602,10 @@ function applySelectedAction(){
   try{const next=M.applyCandidate(pick.proposal);closeDialog();commit(next,'本页动作与关联内容已更新，请核对后准备素材。');}catch(error){$('#action-picker-error').textContent=error.message;}
 }
 function contentReference(p,compact=false){
-  const action=M.ACTIONS.find(a=>a.id===p.actionId),bookend=p.kind!=='action',characterId=state.draft.settings.characterId;
+  const action=M.pageAction(p),bookend=p.kind!=='action',characterId=state.draft.settings.characterId;
   if(!bookend&&!action)return `<section class="panel content-reference" aria-label="本页动作"><div class="reference-heading"><h3>本页动作</h3>${btn('更换动作','change-action','quiet tiny',adjustmentLocked()||!!state.candidate)}</div><div class="reference-action-title"><h2>${E(p.backendPose||'本页动作')}</h2></div><p>${E(p.teacher)}</p></section>`;
   return `<section class="panel content-reference ${compact?'compact-reference':''}${ui.adjustment?.open&&ui.adjustment.kind==='action'&&ui.adjustment.pageId===p.id?' is-adjustment-target':''}" aria-label="本页动作"><div class="reference-heading"><h3>本页动作</h3><div class="row">${bookend?'':btn('更换动作','change-action','quiet tiny',adjustmentLocked()||!!state.candidate)}</div></div>
-  ${bookend?`<div class="reference-bookend">${S.renderReference(p,state.draft.settings)}<div><strong>${p.kind==='cover'?'封面页':p.kind==='intro'?'故事引入页':'结尾页'}，无需配置主动作</strong><small>${E(characterName(characterId))} · 带领角色</small></div></div>`:`<div class="reference-action-title"><h2>${E(action.name)}</h2><span>${E(action.english)}</span></div><div id="motion-reference">${S.renderReference(p,state.draft.settings)}</div><div class="reference-motion-control">${btn('播放动作','reference-motion','secondary',false,'id="reference-motion-control" aria-pressed="false"')}<small>无音频</small></div><div class="reference-character">${ip(characterId)}<div><strong>${E(characterName(characterId))}</strong></div></div>`}</section>`;
+  ${bookend?`<div class="reference-bookend">${renderReference(p,state.draft.settings)}<div><strong>${p.kind==='cover'?'封面页':p.kind==='intro'?'故事引入页':'结尾页'}，无需配置主动作</strong><small>${E(characterName(characterId))} · 带领角色</small></div></div>`:`<div class="reference-action-title"><h2>${E(action.name)}</h2><span>${E(action.english)}</span></div><div id="motion-reference">${renderReference(p,state.draft.settings)}</div><div class="reference-motion-control">${btn('播放动作','reference-motion','secondary',false,'id="reference-motion-control" aria-pressed="false"')}<small>无音频</small></div><div class="reference-character">${ip(characterId)}<div><strong>${E(characterName(characterId))}</strong></div></div>`}</section>`;
 }
 function sceneImage(page) {
   const src=M.safeMediaUrl(page?.backgroundUrl);
@@ -607,10 +615,18 @@ function renderBackground(page,settings){
   const art=sceneImage(page);
   return art?`<section class="yoga-scene" style="position:relative;overflow:hidden">${art}</section>`:S.renderBackground(page,settings);
 }
-function renderScene(page,settings,options={}){
+function withResolvedPose(page) {
+  const id = M.pageAction(page)?.id;
+  return id && id !== page.actionId ? {...page,actionId:id} : page;
+}
+function renderReference(page,settings) {
+  return S.renderReference(withResolvedPose(page),settings);
+}
+function renderScene(page,settings,options={}) {
   const art=sceneImage(page);
-  if(!art)return S.render(page?.backendPose!==undefined&&!page.actionId&&['action','intro'].includes(page.kind)?{...page,kind:'cover'}:page,settings,options);
-  return `<section class="yoga-scene ys-bookend${options.compact?' ys-compact':''}" data-yoga-scene aria-label="${E(page.title)}" style="position:relative;overflow:hidden">${art}${options.showLabel===false?'':`<div class="ys-page-label">${E(page.title)}</div>`}<div class="ys-subtitle"><p>${E(page.english).replace(/\n/g,'<br>')}</p></div></section>`;
+  if(page.wonder)return S.render(page,settings,{...options,backgroundMarkup:art});
+  if(art || page.backendPose!==undefined)return S.renderCourseScene(withResolvedPose(page),settings,{...options,backgroundMarkup:art});
+  return S.render(page,settings,options);
 }
 function createVoicePlayer(options){return backend?.createPlayer(options)||window.YogaPlayback.createPlayer(options);}
 function contentView(){
@@ -683,7 +699,7 @@ function reviewEvidence(p){
   const media=(page,owner,side,kind)=>{
     const status=pageAssetStatus(page,kind,{draft:owner}),label=side==='before'?'授课版 V'+state.published.version:currentLabel;
     if(kind==='background')return `<figure class="review-media ${side==='before'?'review-media-pair-start':''}"><div class="yoga-review-media-preview">${status==='ready'?renderBackground(page,owner.settings):`<div class="review-media-placeholder">${status==='stale'?'场景背景需更新':'场景背景尚未生成'}</div>`}</div><figcaption><strong>${label} · 场景背景</strong><span>${E(page.scene)}</span></figcaption></figure>`;
-    if(kind==='motion')return `<figure class="review-media ${side==='before'?'review-media-pair-start':''}"><div class="yoga-review-media-preview">${S.renderReference(page,owner.settings)}${page.kind==='action'?`<div class="yoga-review-character">${ip(owner.settings.characterId)}</div>`:''}</div><figcaption><strong>${label} · ${E(characterName(owner.settings.characterId))}</strong><span>${page.kind==='action'?E(actionName(page.actionId))+' · 动作参考'+(status==='ready'?'':status==='stale'?' · 动作素材需更新':' · 动作素材待加载'):'封面／结尾 · 无主动作'}</span></figcaption></figure>`;
+    if(kind==='motion')return `<figure class="review-media ${side==='before'?'review-media-pair-start':''}"><div class="yoga-review-media-preview">${renderReference(page,owner.settings)}${page.kind==='action'?`<div class="yoga-review-character">${ip(owner.settings.characterId)}</div>`:''}</div><figcaption><strong>${label} · ${E(characterName(owner.settings.characterId))}</strong><span>${page.kind==='action'?E(pageActionName(page))+' · 动作参考'+(status==='ready'?'':status==='stale'?' · 动作素材需更新':' · 动作素材待加载'):'封面／结尾 · 无主动作'}</span></figcaption></figure>`;
     return `<figure class="review-media yoga-review-audio ${side==='before'?'review-media-pair-start':''}"><figcaption><strong>${label} · 字幕</strong>${voiceChanged?`<span>${E(page.english)}</span>`:''}</figcaption>${btn('试听本页字幕','review-voice','secondary tiny',status!=='ready',`data-id="${page.id}" data-side="${side}" id="review-voice-${side}-${page.id}" aria-pressed="false"`)}<small id="review-voice-status-${side}-${page.id}" role="status">${status==='ready'?'':status==='stale'?'英语配音需更新后可试听':'英语配音尚未准备'}</small></figure>`;
   };
   return `<details class="review-evidence" id="review-evidence-${p.id}"><summary>查看画面与试听</summary><div class="review-evidence-body"><div class="review-media-grid">${backgroundChanged?media(prior,priorCourse,'before','background'):''}${media(p,state.draft,'after','background')}${motionChanged?media(prior,priorCourse,'before','motion'):''}${media(p,state.draft,'after','motion')}${voiceChanged?media(prior,priorCourse,'before','voice'):''}${media(p,state.draft,'after','voice')}</div></div></details>`;
@@ -799,7 +815,7 @@ function setMusicVolume(value){
 function reviewReturnLabel(){const index=state.draft?.pages.findIndex(p=>p.id===ui.reviewReturnPageId);return '返回核对'+(index>=0?' · 第 '+(index+1)+' 页':'');}
 function reviewItem(p,section,changes=[]){
   const i=state.draft.pages.indexOf(p),pending=pagePending(p),ready=!pending.length,key='all-'+p.id;
-  return `<article id="review-item-${key}" class="review-row review-item yoga-review-row" tabindex="-1"><div class="review-number">${String(i+1).padStart(2,'0')}</div><div class="yoga-review-copy"><strong>${E(p.title)}</strong><div class="yoga-review-english">${E(p.english)}</div><small>${p.kind==='action'?'主动作：'+E(actionName(p.actionId)):(p.kind==='cover'?'封面':p.kind==='intro'?'故事引入':'结尾')+' · 无主动作'}</small>${reviewDiff(changes,state.published?.course.pages.find(item=>item.id===p.id),p)}${reviewEvidence(p)}${pending.length?`<small class="review-missing">${pending.map(x=>`${E(assetLabels[x.kind])} · ${x.status==='stale'?'待更新':x.kind==='motion'?'待加载':'待生成'}`).join('；')}</small>`:''}</div><div class="row review-actions review-item-actions">${ready?btn('从本页预览','review-preview','secondary tiny',false,`data-id="${p.id}" data-review-key="${key}"`):btn(pending.every(x=>x.status==='stale')?'去更新本页素材':'去补齐本页素材','review-assets','secondary tiny',false,`data-id="${p.id}" data-review-key="${key}"`)}${btn('调整内容','review-page','quiet tiny',!!state.job||!!ui.busy,`data-id="${p.id}" data-review-key="${key}"`)}</div></article>`;
+  return `<article id="review-item-${key}" class="review-row review-item yoga-review-row" tabindex="-1"><div class="review-number">${String(i+1).padStart(2,'0')}</div><div class="yoga-review-copy"><strong>${E(p.title)}</strong><div class="yoga-review-english">${E(p.english)}</div><small>${p.kind==='action'?'主动作：'+E(pageActionName(p)):(p.kind==='cover'?'封面':p.kind==='intro'?'故事引入':'结尾')+' · 无主动作'}</small>${reviewDiff(changes,state.published?.course.pages.find(item=>item.id===p.id),p)}${reviewEvidence(p)}${pending.length?`<small class="review-missing">${pending.map(x=>`${E(assetLabels[x.kind])} · ${x.status==='stale'?'待更新':x.kind==='motion'?'待加载':'待生成'}`).join('；')}</small>`:''}</div><div class="row review-actions review-item-actions">${ready?btn('从本页预览','review-preview','secondary tiny',false,`data-id="${p.id}" data-review-key="${key}"`):btn(pending.every(x=>x.status==='stale')?'去更新本页素材':'去补齐本页素材','review-assets','secondary tiny',false,`data-id="${p.id}" data-review-key="${key}"`)}${btn('调整内容','review-page','quiet tiny',!!state.job||!!ui.busy,`data-id="${p.id}" data-review-key="${key}"`)}</div></article>`;
 }
 function reviewView(){
   const changes=reviewChanges(),changedPages=new Map(changes.pages.map(item=>[item.page.id,item.fields])),firstReview=!state.published;
@@ -889,9 +905,9 @@ function startAI(kind,work,pageId=null){
 async function backendCandidate(base,options,signal){
   if(!cloud)return M.proposeChange(base,options);
   const draft=base.draft,kind=['english','action'].includes(options.target)?options.target:'theme';
-  const currentPages=draft.pages.map((page,index)=>({page:index+1,kind:page.kind,pose:M.ACTIONS.find(a=>a.id===page.actionId)?.english||page.backendPose,subtitle:page.english,teacherLang:page.teacher,imagePrompt:page.scene}));
+  const currentPages=draft.pages.map((page,index)=>({page:index+1,kind:page.kind,pose:M.pageAction(page)?.pose||M.pageAction(page)?.english||page.backendPose,subtitle:page.english,teacherLang:page.teacher,imagePrompt:page.scene}));
   const target=options.scope==='course'?'整课':`第 ${draft.pages.findIndex(page=>page.id===options.pageId)+1} 页`;
-  const scopeNote=kind==='english'?'本次只编辑英文字幕。':kind==='action'?'只调整指定页的动作和动作指令。动作必须为 Mountain、Tree、Star 或 Butterfly。':'根据要求调整指定范围内的课程内容。';
+  const scopeNote=kind==='english'?'本次只编辑英文字幕。':kind==='action'?'只调整指定页的动作和动作指令。动作必须选自 '+M.supportedMotionPoses.join('、')+'。':'根据要求调整指定范围内的课程内容。';
   const direction=`以现有 ${draft.pages.length} 页为基线。返回相同数量及顺序的完整页面，保留未指定的页面。修改范围：${target}。${scopeNote}\n教师的修改要求：${options.prompt}\n现有课堂页面：\n${JSON.stringify(currentPages).slice(0,13000)}`;
   const result=await cloud.generate(activeId,direction,signal);
   if(result.pages.length!==draft.pages.length)throw Error('后台返回的页数与当前课程不一致，请重试。');
@@ -899,7 +915,7 @@ async function backendCandidate(base,options,signal){
     if(options.scope==='page'&&page.id!==options.pageId)return [];
     const next=result.pages[index];
     const action=M.actionForPose(next.pose);
-    if(kind==='action'&&!action)throw Error('后台返回的动作暂无示范。请选择山式、树式、星星式或蝴蝶式。');
+    if(kind==='action'&&!action)throw Error('后台返回的动作暂无示范，请在本页动作库中选择。');
     return [{pageId:page.id,title:next.title||action?.name,actionId:action?.id,english:next.subtitle,teacher:next.teacherLang,story:next.action,scene:next.imagePrompt}];
   });
   return M.proposeBackendChange(base,{...options,kind},updates);

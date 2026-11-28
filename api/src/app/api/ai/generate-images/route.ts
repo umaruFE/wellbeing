@@ -2,9 +2,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { authenticate } from '@/lib/auth';
 import { n8nClient } from '@/lib/n8n/client';
+import { generateWithDeepSeek } from '@/lib/n8n/deepseek';
 import { mediaSubmissionFailure } from '@/lib/n8n/media';
 import { createGenerationTask } from '@/lib/background-tasks';
 import { getPrompt } from '@/prompts/registry';
+
+// Course pages can contain older single-illustration descriptions with children
+// and poses. Only the environment belongs in the bitmap behind the moving guide.
+async function yogaBackdropPrompt(scene: string, changes: string, guide: string) {
+  const setting = await generateWithDeepSeek(
+    'Extract the physical SETTING of one educational story scene. Reply with only 1–3 short English sentences describing the place, time of day, light, story props and any story animals necessary to this particular scene. Apply the requested changes to the scenery. Keep the course story intact. Leave out people, the named guide, body positions, dialogue, lettering and physical instructions. Put a prop carried by a person on an environmental support if needed. Do not describe the omitted subjects. Do not introduce new locations or characters.',
+    JSON.stringify({ scene, changes, guide }), 60000,
+  );
+  return [
+    'A full-bleed 16:9 flat 2D cartoon environment for a children’s animated story.',
+    setting,
+    'Rounded illustrated shapes, clean thin dark-green or warm-brown contour lines, opaque softly colored flat fills. Use a limited harmonious palette suited to this time of day. Overlap large simple silhouettes in three depth planes, with distant shapes lighter and lower in contrast. A few small crisp decorative details at the edges.',
+    'Broad uninterrupted open space around 43 percent from the left, with an unobstructed floor or ground extending to the bottom edge. Keep foreground props at the far sides and the story focal point toward the right. Fill the frame edge to edge.',
+    'Scenery layer only. No people or mascots, no lettering, labels, borders or watermarks.',
+  ].join(' ');
+}
 
 /**
  * N8N 图片生成路由
@@ -35,7 +52,7 @@ export async function OPTIONS() {
  * 生成多张图片，通过 N8N Workflow 调用
  * 
  * @param request.body
- * @param workflow_type - 工作流类型: scene|person|lora-v3|background|ip-character|composite
+ * @param workflow_type - 工作流类型: scene|person|lora-v3|background|ip-character|composite|yoga-backdrop
  * @param prompt - 提示词
  * @param width - 图片宽度
  * @param height - 图片高度
@@ -101,22 +118,25 @@ export async function POST(request: NextRequest) {
           getPrompt('scene.negative.background'),
         ])
       : ['', ''];
-    const effectivePrompt = isIpSceneBackground
-      ? `${backgroundStyle}, ${prompt}`
-      : prompt;
-    const effectiveNegativePrompt = negative_prompt || backgroundNegative || undefined;
+    const isYogaBackdrop = workflow_type === 'yoga-backdrop';
+    const effectivePrompt = isYogaBackdrop
+      ? await yogaBackdropPrompt(prompt, String(body.scene_changes || ''), String(body.guide || ''))
+      : isIpSceneBackground ? `${backgroundStyle}, ${prompt}` : prompt;
+    const effectiveNegativePrompt = isYogaBackdrop
+      ? 'human figures, children, teacher, mascot, yoga demonstration, lettering, text, watermark, paper border, book cover, watercolor, pencil hatching, photographic texture, 3D render'
+      : negative_prompt || backgroundNegative || undefined;
 
     // 4. 准备 N8N 调用参数
     const n8nPayload = {
-      workflow_type,
+      workflow_type: isYogaBackdrop ? 'scene' : workflow_type,
       prompt: effectivePrompt,
       negative_prompt: effectiveNegativePrompt,
       width,
       height,
       reference_image,
       video_style,
-      name: name || character_name,  // N8N 用 name 判断角色
-      character_name,
+      name: isYogaBackdrop ? 'bg' : name || character_name,  // N8N 用 name 判断角色
+      character_name: isYogaBackdrop ? undefined : character_name,
       roles,
       user_id: user?.id,
       organization_id,
