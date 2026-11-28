@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import { parse } from '@babel/parser';
+import { teachingButtonProps } from '../src/modules/picture-book/pictureBookPages.js';
 import { pictureBookCases, createPictureBookCaseDraft } from '../src/modules/picture-book/pictureBookCases.js';
 
 const plain = value => JSON.parse(JSON.stringify(value));
@@ -24,6 +25,23 @@ function collect(node) {
   }
 }
 collect(parse(source, { sourceType: 'module', plugins: ['jsx'] }));
+
+test('teaching skips empty rows and keeps both legacy and current pages in reading order', () => {
+  const music = { url: '/book.mp3' };
+  const trigger = {};
+  let opened;
+  const pages = [null, { text: '   ' }, { img: '/legacy.png', subtitle: ' First ' },
+    { imageUrl: '/illustration.png' }, { text: 'Text only' }, { englishText: 'Older caption' }];
+  const button = teachingButtonProps({ pages, title: 'Book', music }, value => { opened = value; }, 'Empty book');
+  button.onClick({ currentTarget: trigger });
+  assert.deepEqual(opened, { title: 'Book', music, trigger, pages: [
+    { image: '/legacy.png', text: 'First' }, { image: '/illustration.png', text: '' },
+    { image: '', text: 'Text only' }, { image: '', text: 'Older caption' },
+  ] });
+  for (const empty of [undefined, [], [null, { imageDescription: 'Prompt only', imageUrl: '   ' }]]) {
+    assert.deepEqual(teachingButtonProps({ pages: empty }, assert.fail, 'Empty book'), { disabled: true, title: 'Empty book' });
+  }
+});
 
 function actual(name, environment = {}) {
   assert.ok(implementations.has(name), `Missing production declaration: ${name}`);
@@ -117,7 +135,7 @@ test('all four case pages contain readable content and resolve to the existing l
 function caseFixture() {
   const state = { editingBookId: 'previous-book', basicInfo: { age: 'previous-age' }, activityPlan: { storyTitleEn: 'Previous' },
     pages: [{ id: 'previous-page' }], backgroundMusic: { id: 'previous-music' }, step: 3,
-    libraryTab: 'cases', listNotice: 'previous preview failure', searchTerm: 'previous search', message: 'previous error', saveState: 'previous saved', view: 'list' };
+    libraryTab: 'cases', searchTerm: 'previous search', message: 'previous error', saveState: 'previous saved', view: 'list' };
   const editingBookIdRef = { current: 'previous-book' };
   const requests = [];
   const initialBasicInfo = actual('initialBasicInfo');
@@ -151,7 +169,6 @@ test('useBookCase clears both previous IDs, enters the first step and opens an i
   assert.equal(h.state.step, 0);
   assert.equal(h.state.libraryTab, 'mine');
   assert.equal(h.state.searchTerm, '');
-  assert.equal(h.state.listNotice, '');
   assert.equal(h.state.message, '');
   assert.equal(h.state.saveState, '');
   assert.equal(h.state.view, 'studio');

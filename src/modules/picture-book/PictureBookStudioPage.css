@@ -141,7 +141,6 @@
 .pbv2-list-empty { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 48px 20px; color: var(--pb-muted); text-align: center; }
 .pbv2-list-empty h2 { margin: 0; color: var(--pb-ink); font-size: 20px; font-weight: 600; }
 .pbv2-list-empty p { margin: 0; }
-.pbv2-library-notice { margin: 0 0 20px; padding: 12px 16px; border: 1px solid var(--pb-line); border-radius: var(--wb-control-radius); background: var(--pb-panel); color: var(--pb-ink); overflow-wrap: anywhere; }
 .pbv2-card-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
 .pbv2-book-card { display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--pb-line); border-radius: var(--wb-card-radius); background: var(--pb-panel); overflow: hidden; transition: border-color .15s ease; }
 .pbv2-book-card:hover { border-color: var(--wb-selected-border); }
@@ -173,172 +172,107 @@
   .pbv2-card-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
 }
 
-/* ====== 授课模式 / Presentation overlay ====== */
+/* A modal classroom keeps the library or editor mounted behind the book. */
 .pbv2-presentation {
   position: fixed;
   inset: 0;
-  z-index: 9999;
-  background: #111;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.pbv2-presentation-stage {
   width: 100%;
   height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-}
-
-.pbv2-presentation-stage img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  border-radius: var(--wb-control-radius);
-  box-shadow: 0 8px 40px rgba(0, 0, 0, .5);
-}
-
-.pbv2-presentation-placeholder {
-  color: #4b5563;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.pbv2-presentation-nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 64px;
-  height: 64px;
-  border: none;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, .12);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background .15s ease;
-}
-
-.pbv2-presentation-nav:hover:not(:disabled) {
-  background: rgba(255, 255, 255, .26);
-}
-
-.pbv2-presentation-nav:disabled {
-  opacity: .3;
-  cursor: not-allowed;
-}
-
-.pbv2-presentation-prev {
-  left: 24px;
-}
-
-.pbv2-presentation-next {
-  right: 24px;
-}
-
-.pbv2-presentation-text {
-  position: absolute;
-  left: 50%;
-  bottom: 56px;
-  transform: translateX(-50%);
-  max-width: min(900px, 86%);
-  padding: 14px 24px;
-  border-radius: var(--wb-control-radius);
-  background: rgba(0, 0, 0, .6);
-  color: #fff;
-  text-align: center;
-  font-size: 22px;
-  line-height: 32px;
-  font-weight: 600;
-}
-
-.pbv2-presentation-counter {
-  position: absolute;
-  top: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 6px 16px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, .14);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.pbv2-presentation-exit {
-  position: absolute;
-  top: 20px;
-  right: 24px;
-  width: 44px;
-  height: 44px;
-  border: none;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, .14);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background .15s ease;
-}
-
-.pbv2-presentation-exit:hover {
-  background: rgba(255, 255, 255, .3);
-}
-
-/* System-style teaching presentation */
-.pbv2-presentation {
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: clamp(12px, 3vw, 32px);
+  border: 0;
   background: var(--pb-surface);
   color: var(--pb-ink);
+  font-family: var(--wb-font);
+  overflow: auto;
+  overscroll-behavior: contain;
 }
 
-.pbv2-presentation-stage {
-  width: min(1100px, calc(100% - 176px));
-  height: min(72vh, 760px);
-  padding: 18px;
+.pbv2-presentation[open] {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: clamp(8px, 2vh, 20px);
+}
+
+.pbv2-presentation-header,
+.pbv2-presentation-footer,
+.pbv2-presentation-page {
+  width: 100%;
+  max-width: 1120px;
+  min-width: 0;
+  margin: 0 auto;
+}
+
+.pbv2-presentation-header,
+.pbv2-presentation-footer,
+.pbv2-presentation-pagination,
+.pbv2-presentation-music {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pbv2-presentation-header { justify-content: space-between; }
+.pbv2-presentation-header h2 {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: clamp(16px, 2.4vw, 26px);
+  line-height: 1.25;
+}
+.pbv2-presentation-header button { flex-shrink: 0; }
+
+.pbv2-presentation-page {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: clamp(10px, 2vw, 24px);
   border: 1px solid var(--pb-soft-line);
   border-radius: var(--wb-card-radius);
   background: var(--pb-panel);
-  box-shadow: none;
 }
 
-.pbv2-presentation-stage img { border-radius: var(--wb-control-radius); box-shadow: none; }
-.pbv2-presentation-placeholder { color: var(--pb-muted); }
-.pbv2-presentation-nav,
-.pbv2-presentation-exit {
-  border: 1px solid var(--pb-line);
-  background: #fff;
-  color: var(--pb-ink);
-  box-shadow: none;
-}
-.pbv2-presentation-nav:hover:not(:disabled),
-.pbv2-presentation-exit:hover { background: var(--pb-coral-soft); }
-.pbv2-presentation-text {
-  bottom: 28px;
-  border: 1px solid var(--pb-soft-line);
+.pbv2-presentation-page img {
+  display: block;
+  min-height: 0;
+  width: 100%;
+  flex: 1;
+  object-fit: contain;
   border-radius: var(--wb-control-radius);
-  background: #fff;
-  color: var(--pb-ink);
-  box-shadow: none;
 }
-.pbv2-presentation-counter {
-  border: 1px solid var(--pb-soft-line);
-  background: #fff;
-  color: var(--pb-ink);
-  box-shadow: none;
+
+.pbv2-presentation-page figcaption {
+  max-width: 72ch;
+  max-height: 40%;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  text-align: center;
+  font-size: clamp(16px, 2.5vw, 28px);
+  line-height: 1.45;
+  font-weight: 600;
 }
-@media (max-width: 720px) {
-  .pbv2-presentation-stage { width: calc(100% - 32px); height: min(68vh, 620px); }
-  .pbv2-presentation-nav { width: 46px; height: 46px; }
-  .pbv2-presentation-prev { left: 10px; }
-  .pbv2-presentation-next { right: 10px; }
-  .pbv2-presentation-text { bottom: 18px; max-width: calc(100% - 32px); font-size: 16px; line-height: 24px; }
+
+.pbv2-presentation-page.text-only figcaption { max-height: 100%; font-size: clamp(22px, 4vw, 44px); }
+.pbv2-presentation-unavailable,
+.pbv2-presentation-music > span { color: var(--pb-muted); }
+.pbv2-presentation-unavailable { display: flex; align-items: center; gap: 8px; }
+.pbv2-presentation-footer { flex-wrap: wrap; justify-content: center; }
+.pbv2-presentation-pagination { font-variant-numeric: tabular-nums; }
+.pbv2-presentation-pagination span { min-width: 5ch; text-align: center; }
+.pbv2-presentation-music { justify-content: center; flex-wrap: wrap; min-width: 0; }
+.pbv2-presentation-music > span { max-width: 24ch; overflow-wrap: anywhere; }
+.pbv2-presentation-music audio { width: min(240px, 100%); height: 36px; }
+
+@media (max-width: 600px) {
+  .pbv2-presentation-footer, .pbv2-presentation-music { gap: 6px; }
+  .pbv2-presentation-music { width: 100%; }
+  .pbv2-presentation-music audio { width: min(210px, 100%); }
 }
 
 /* The native dialog owns focus trapping, Escape and the modal backdrop. */

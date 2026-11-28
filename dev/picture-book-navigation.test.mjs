@@ -9,7 +9,7 @@ import { parse } from '@babel/parser';
 // in the production handlers rather than a second implementation in the test.
 const pageUrl = new URL('../src/modules/picture-book/PictureBookStudioPage.jsx', import.meta.url);
 const source = fs.readFileSync(pageUrl, 'utf8');
-const functionNames = new Set(['saveBook', 'backToList', 'goToStep', 'enterMaking']);
+const functionNames = new Set(['saveBook', 'hasContentChanges', 'backToList', 'goToStep', 'enterMaking']);
 const implementations = new Map();
 
 function collectFunctions(node) {
@@ -142,4 +142,13 @@ test('browsing a saved or untouched new book can change steps and return without
   await actualHandler('goToStep', environment)(2);
   await actualHandler('backToList', environment)();
   assert.deepEqual(actions, [2, 'list']);
+});
+
+test('restoring a page to its saved text also restores clean navigation', () => {
+  const saved = { basicInfo: {}, activityPlan: {}, pages: [{ text: 'Original' }], backgroundMusic: null };
+  const environment = { ...saved, savedContent: { current: saved } };
+  environment.pages = [{ text: 'Changed' }];
+  assert.equal(actualHandler('hasContentChanges', environment)(), true);
+  environment.pages = [{ text: 'Original' }];
+  assert.equal(actualHandler('hasContentChanges', environment)(), false);
 });

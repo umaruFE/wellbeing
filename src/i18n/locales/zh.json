@@ -1884,7 +1884,11 @@
     "clearSearch": "清除搜索",
     "listLoadFailed": "活动列表加载失败，请重试。",
     "retryList": "重新加载",
-    "previewBlocked": "预览窗口未能打开，请允许此网站打开新窗口后重试。"
+    "exitTeaching": "退出授课",
+    "previousPage": "上一页",
+    "nextPage": "下一页",
+    "illustrationUnavailable": "本页插图加载失败",
+    "musicUnavailable": "背景音乐加载失败"
   },
   "square": {
     "views": "浏览 {{count}} 次",

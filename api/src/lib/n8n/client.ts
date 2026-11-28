@@ -10,6 +10,7 @@
 // 使用习惯埋点：n8nClient.call 是所有 AI 工作流调用的统一入口，
 // 在此埋点一次即可覆盖全部 AI 生成行为（写入 audit_logs，供 ETL 聚合）
 import { recordEvent } from '@/lib/usage-tracking';
+import { MediaSubmissionError, mediaFailureMessage, mediaTaskId } from './media';
 
 const N8N_API_BASE = process.env.N8N_API_BASE_URL || 'http://117.50.218.161:5678';
 const N8N_API_KEY = process.env.N8N_API_KEY;
@@ -129,9 +130,18 @@ class N8NClient {
     }
   }
 
-  /**
-   * 获取 API 请求头
-   */
+  async submitMedia(workflow: string, payload: Record<string, unknown>) {
+    let result;
+    try {
+      result = await this.call(workflow, payload);
+    } catch (cause) {
+      const reason = cause instanceof Error ? cause.message : '';
+      throw new MediaSubmissionError(mediaFailureMessage(reason, '生成服务暂时无法受理，请稍后重试。'), { cause });
+    }
+    return { ...result, executionId: mediaTaskId(result) };
+  }
+
+  /** 获取 API 请求头 */
   getHeaders(): Record<string, string> {
     // N8N REST API 使用 X-N8N-API-KEY header
     const headers: Record<string, string> = {};
@@ -171,10 +181,9 @@ class N8NClient {
         console.log(`[pollExecution] 状态: ${status}, finished: ${finished}`);
 
         // N8N 可能的状态: success, error, running, waiting, stopped
-        if (['error', 'stopped', 'canceled', 'cancelled', 'crashed'].includes(status)) {
+        if (['error', 'failed', 'stopped', 'canceled', 'cancelled', 'crashed'].includes(status)) {
           const reason = String(data.data?.resultData?.error?.message || '');
-          const error = /GPU|ComfyUI/i.test(reason) ? '生成服务未连上 GPU，请稍后重试。'
-            : /timed? ?out|ECONN|connection/i.test(reason) ? '生成服务连接超时，请稍后重试。' : '生成任务失败，请重试。';
+          const error = mediaFailureMessage(reason, '生成任务失败，请重试。');
           return { status: 'error', error, data };
         }
         if (status === 'success' || (!status && finished === true)) {

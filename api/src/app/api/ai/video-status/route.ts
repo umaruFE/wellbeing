@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { mediaFailureMessage } from '@/lib/n8n/media';
 
-const AI_API_BASE_URL = 'http://117.50.218.161:5678';
+const AI_API_BASE_URL = process.env.N8N_API_BASE_URL || 'http://117.50.218.161:5678';
 const N8N_API_KEY = process.env.N8N_API_KEY || '';
 
 export async function OPTIONS() {
@@ -155,7 +156,9 @@ export async function GET(request: NextRequest) {
       // A completed n8n execution already contains the final `Insert row`
       // response. Prefer it so a delayed get-resource webhook cannot keep the
       // UI polling forever.
-      const executionVideoUrl = findVideoUrl(executionStatus);
+      const output = executionStatus.data?.resultData;
+      const lastRun = output?.runData?.[output.lastNodeExecuted]?.at(-1);
+      const executionVideoUrl = findVideoUrl(lastRun?.data?.main);
       if (executionVideoUrl) {
         return completedResponse(executionId, executionVideoUrl);
       }
@@ -194,13 +197,11 @@ export async function GET(request: NextRequest) {
           headers: { 'Access-Control-Allow-Origin': '*' }
         });
       }
-    } else if (statusData.status === 'error' || statusData.status === 'failed') {
-      console.error('执行失败，详细状态:', JSON.stringify(executionStatus, null, 2));
+    } else if (['error', 'failed', 'crashed', 'stopped', 'canceled', 'cancelled'].includes(statusData.status || '')) {
+      const reason = String(executionStatus.data?.resultData?.error?.message || statusData.error || '');
       return NextResponse.json({
         success: false,
-        error: '执行失败',
-        details: statusData.error || 'N8N工作流执行失败',
-        executionStatus: executionStatus,
+        error: mediaFailureMessage(reason, '视频生成任务已结束，未生成视频。'),
         data: {
           executionId: executionId,
           status: 'failed'

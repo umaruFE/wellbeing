@@ -6,10 +6,7 @@ import {
   ArrowLeft,
   BookOpenText,
   Check,
-  ChevronLeft,
-  ChevronRight,
   Image,
-  LayoutTemplate,
   Loader2,
   Music2,
   Monitor,
@@ -21,7 +18,6 @@ import {
   Sparkles,
   Trash2,
   Upload,
-  Volume2,
   Wand2,
   X,
 } from 'lucide-react';
@@ -31,9 +27,10 @@ import apiService from '../../services/api';
 import uploadService from '../../services/uploadService';
 import { getPromptTemplate } from '../../services/promptLibrary';
 import { resolveGeneratedAsset } from '../../utils/assetGeneration';
-import { openTeachingWindow } from '../../utils/teachingWindow';
 import { trackEvent } from '../../utils/usageTracker';
 import { createPictureBookCaseDraft } from './pictureBookCases';
+import { PictureBookPresentation } from './PictureBookPresentation';
+import { teachingButtonProps } from './pictureBookPages';
 import './PictureBookStudioPage.css';
 
 const initialBasicInfo = {
@@ -100,10 +97,6 @@ function toggleList(list, value) {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
 }
 
-function hasTeachingPages(pages) {
-  return Array.isArray(pages) && pages.some(page => page && (page.imageUrl || page.img || page.subtitle || page.text));
-}
-
 export function PictureBookStudioPage() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
@@ -113,7 +106,6 @@ export function PictureBookStudioPage() {
   const [bookCases, setBookCases] = React.useState([]);
   const [listLoading, setListLoading] = React.useState(true);
   const [listError, setListError] = React.useState(false);
-  const [listNotice, setListNotice] = React.useState('');
   const [libraryTab, setLibraryTab] = React.useState('cases');
   const [searchTerm, setSearchTerm] = React.useState('');
   const [editingBookId, setEditingBookId] = React.useState(null);
@@ -121,6 +113,7 @@ export function PictureBookStudioPage() {
   const [basicInfo, setBasicInfo] = React.useState(initialBasicInfo);
   const [activityPlan, setActivityPlan] = React.useState(initialActivityPlan);
   const [pages, setPages] = React.useState([]);
+  const [presentation, setPresentation] = React.useState(null);
   const [generatingAll, setGeneratingAll] = React.useState(false);
   const [generating, setGenerating] = React.useState(false);
   const [message, setMessage] = React.useState('');
@@ -249,7 +242,7 @@ export function PictureBookStudioPage() {
           setAudioLibrary((current) => [savedMusic, ...current.filter((item) => item.id !== savedMusic.id)]);
           return;
         }
-        if (status.status === 'error') throw new Error(t('pictureBook.aiMusicFailed'));
+        if (status.status === 'error') throw new Error(status.error || t('pictureBook.aiMusicFailed'));
       }
       throw new Error(t('pictureBook.aiMusicTimeout'));
     } catch (error) { setAiMusicError(error instanceof Error ? error.message : t('pictureBook.aiMusicFailed')); }
@@ -268,7 +261,6 @@ export function PictureBookStudioPage() {
 
   const openBook = (book) => {
     setLibraryTab('mine');
-    setListNotice('');
     editingBookIdRef.current = book.id;
     setEditingBookId(book.id);
     const data = book.book_data || {};
@@ -292,7 +284,6 @@ export function PictureBookStudioPage() {
   const createNewBook = () => {
     setLibraryTab('mine');
     setSearchTerm('');
-    setListNotice('');
     editingBookIdRef.current = null;
     setEditingBookId(null);
     setBasicInfo(initialBasicInfo);
@@ -309,7 +300,6 @@ export function PictureBookStudioPage() {
   const useBookCase = (book) => {
     savedContent.current = null;
     const data = createPictureBookCaseDraft(book);
-    setListNotice('');
     editingBookIdRef.current = null;
     setEditingBookId(null);
     setBasicInfo({ ...initialBasicInfo, ...data.basicInfo });
@@ -322,18 +312,6 @@ export function PictureBookStudioPage() {
     setMessage('');
     setSaveState('');
     setView('studio');
-  };
-
-  const presentBook = (book) => {
-    setListNotice('');
-    const data = book.book_data || {};
-    if (!hasTeachingPages(data.pages)) {
-      setListNotice(t('pictureBook.presentEmpty'));
-      return;
-    }
-    if (!openTeachingWindow({ pages: data.pages, title: book.title || t('pictureBook.untitled'), backgroundMusic: data.backgroundMusic || null })) {
-      setListNotice(t('pictureBook.previewBlocked'));
-    }
   };
 
   const saveBook = async (extraData = {}) => {
@@ -402,7 +380,9 @@ export function PictureBookStudioPage() {
 
   const hasContentChanges = () => {
     const last = savedContent.current;
-    return !last || last.basicInfo !== basicInfo || last.activityPlan !== activityPlan || last.pages !== pages || last.backgroundMusic !== backgroundMusic;
+    return !last || Object.entries({ basicInfo, activityPlan, pages, backgroundMusic }).some(
+      ([key, value]) => last[key] !== value && JSON.stringify(last[key]) !== JSON.stringify(value),
+    );
   };
 
   const backToList = async () => {
@@ -754,10 +734,9 @@ export function PictureBookStudioPage() {
           books={bookList}
           cases={bookCases}
           activeTab={libraryTab}
-          onTabChange={(tab) => { setLibraryTab(tab); setListNotice(''); }}
+          onTabChange={setLibraryTab}
           loading={listLoading}
           error={listError}
-          notice={listNotice}
           onRetry={fetchBookList}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
@@ -765,7 +744,7 @@ export function PictureBookStudioPage() {
           onOpen={openBook}
           onUseCase={useBookCase}
           onDelete={deleteBook}
-          onPresent={presentBook}
+          onPresent={setPresentation}
         />
       ) : (
         <>
@@ -840,11 +819,21 @@ export function PictureBookStudioPage() {
             {step === 0 && <button type="button" className="wb-button primary" disabled={!canBuildPlan || generating || saving} onClick={buildPlan}>{generating ? <Loader2 className="spin" size={16} /> : <Wand2 size={16} />}{generating ? t('pictureBook.generating') : t('pictureBook.generatePlan')}</button>}
             {step === 1 && <button type="button" className="wb-button primary" disabled={generating || saving} onClick={buildDesign}>{generating ? <Loader2 className="spin" size={16} /> : <BookOpenText size={16} />}{generating ? t('pictureBook.generating') : t('pictureBook.generateDesign')}</button>}
             {step === 2 && <button type="button" className="wb-button primary" disabled={generatingAll || saving} onClick={() => enterMaking('all')}>{generatingAll ? <Loader2 className="spin" size={16} /> : <Sparkles size={16} />}{generatingAll ? t('pictureBook.generating') : t('pictureBook.generateBook')}</button>}
-            {step === 3 && <><button type="button" className="wb-button" disabled={generatingAll || saving} onClick={generateAllImages}>{generatingAll ? <Loader2 className="spin" size={16} /> : <RefreshCw size={16} />}{generatingAll ? t('pictureBook.generating') : t('pictureBook.regenerateAll')}</button><button type="button" className="wb-button primary" disabled={pages.length === 0} onClick={() => { if (!openTeachingWindow({ pages, title: activityPlan.storyTitleEn || t('pictureBook.untitled'), backgroundMusic })) setMessage(t('pictureBook.presentEmpty')); }}><Monitor size={16} />{t('common.teachMode')}</button></>}
+            {step === 3 && <>
+              <button type="button" className="wb-button" disabled={generatingAll || saving} onClick={generateAllImages}>{generatingAll ? <Loader2 className="spin" size={16} /> : <RefreshCw size={16} />}{generatingAll ? t('pictureBook.generating') : t('pictureBook.regenerateAll')}</button>
+              <button type="button" className="wb-button primary" {...teachingButtonProps(
+                { pages, title: activityPlan.storyTitleEn || t('pictureBook.untitled'), music: backgroundMusic },
+                setPresentation, t('pictureBook.presentEmpty'),
+              )}>
+                <Monitor size={16} aria-hidden="true" />{t('common.teachMode')}
+              </button>
+            </>}
           </div>
         </footer>
         </>
       )}
+
+      {presentation && <PictureBookPresentation {...presentation} onExit={() => setPresentation(null)} />}
 
       {showMusicPicker && (
         <dialog ref={musicDialogRef} className="wb-dialog pbv2-music-modal" aria-labelledby="pbv2-music-title" onCancel={(event) => { event.preventDefault(); closeMusicPicker(); }} onClick={handleMusicBackdropClick}>
@@ -869,7 +858,7 @@ export function PictureBookStudioPage() {
   );
 }
 
-function PictureBookListView({ books, cases, activeTab, onTabChange, loading, error, notice, onRetry, searchTerm, setSearchTerm, onCreate, onOpen, onUseCase, onDelete, onPresent }) {
+function PictureBookListView({ books, cases, activeTab, onTabChange, loading, error, onRetry, searchTerm, setSearchTerm, onCreate, onOpen, onUseCase, onDelete, onPresent }) {
   const { t } = useTranslation();
   const searchInput = React.useRef(null);
   const searchLabel = t('common.searchActivity');
@@ -907,7 +896,6 @@ function PictureBookListView({ books, cases, activeTab, onTabChange, loading, er
       </div>
 
       <ContentTabPanel group="pbv2-library" value={activeTab} aria-busy={loading}>
-        {notice && <p className="pbv2-library-notice" role="alert">{notice}</p>}
         {loading ? (
           <PageLoading />
         ) : error ? (
@@ -922,12 +910,11 @@ function PictureBookListView({ books, cases, activeTab, onTabChange, loading, er
             {visibleBooks.map((book) => {
               const data = book.book_data || {};
               const title = book.title || t('pictureBook.untitled');
-              const playable = hasTeachingPages(data.pages);
-              const previewProps = { disabled: !playable, title: playable ? undefined : t('pictureBook.presentEmpty') };
-              const openCard = () => isCases ? onPresent(book) : onOpen(book);
+              const previewProps = teachingButtonProps({ pages: data.pages, title, music: data.backgroundMusic }, onPresent, t('pictureBook.presentEmpty'));
+              const cardProps = isCases ? previewProps : { onClick: () => onOpen(book) };
               return (
                 <article key={book.id} className={isCases ? 'pbv2-book-card wb-case-card' : 'pbv2-book-card'}>
-                  <button type="button" className={isCases ? 'pbv2-book-cover wb-case-cover' : 'pbv2-book-cover'} {...(isCases ? previewProps : {})} onClick={openCard} aria-label={`${t(isCases ? 'pictureBook.previewCase' : 'common.edit')} ${title}`}>
+                  <button type="button" className={isCases ? 'pbv2-book-cover wb-case-cover' : 'pbv2-book-cover'} {...cardProps} aria-label={`${t(isCases ? 'pictureBook.previewCase' : 'common.edit')} ${title}`}>
                     {book.cover_url ? <img src={book.cover_url} alt="" loading="lazy" onError={(event) => { event.currentTarget.hidden = true; }} /> : null}
                     <span className="pbv2-book-cover-placeholder" aria-hidden="true"><BookOpenText size={40} /></span>
                   </button>
@@ -936,17 +923,17 @@ function PictureBookListView({ books, cases, activeTab, onTabChange, loading, er
                       <MetadataTag tone={book.status === 'published' ? 'ready' : 'draft'}>{t(book.status === 'published' ? 'pictureBook.published' : 'pictureBook.draft')}</MetadataTag>
                       {book.updated_at && <time dateTime={book.updated_at}>{new Date(book.updated_at).toLocaleDateString()}</time>}
                     </div>}
-                    <h3 className={isCases ? 'wb-case-title' : undefined}><button type="button" {...(isCases ? previewProps : {})} onClick={openCard}>{title}</button></h3>
+                    <h3 className={isCases ? 'wb-case-title' : undefined}><button type="button" {...cardProps}>{title}</button></h3>
                     <div className="pbv2-book-meta">
                       {data.basicInfo?.age && <MetadataTag>{data.basicInfo.age}</MetadataTag>}
                       <MetadataTag>{t('pictureBook.pageTotal', { count: data.pages?.length || 0 })}</MetadataTag>
                     </div>
                     <div className={isCases ? 'wb-case-actions' : 'pbv2-book-actions'}>
                       {isCases ? <>
-                        <button type="button" data-wb-button="primary" {...previewProps} onClick={() => onPresent(book)}>{t('pictureBook.previewCase')}</button>
+                        <button type="button" data-wb-button="primary" {...previewProps}>{t('pictureBook.previewCase')}</button>
                         <button type="button" data-wb-button="secondary" onClick={() => onUseCase(book)}>{t('pictureBook.useCase')}</button>
                       </> : <>
-                        <button type="button" data-wb-button="primary" {...previewProps} onClick={() => onPresent(book)}><Monitor size={16} aria-hidden="true" />{t('pictureBook.startTeaching')}</button>
+                        <button type="button" data-wb-button="primary" {...previewProps}><Monitor size={16} aria-hidden="true" />{t('pictureBook.startTeaching')}</button>
                         <button type="button" data-wb-button="secondary" onClick={() => onOpen(book)}>{t('pictureBook.continuePreparing')}</button>
                         <button type="button" data-wb-button="danger" data-wb-icon="" onClick={() => onDelete(book.id)} aria-label={`${t('common.delete')} ${title}`} title={t('common.delete')}><Trash2 size={16} aria-hidden="true" /></button>
                       </>}

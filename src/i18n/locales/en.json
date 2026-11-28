@@ -1885,7 +1885,11 @@
     "clearSearch": "Clear search",
     "listLoadFailed": "Could not load activities. Please try again.",
     "retryList": "Reload",
-    "previewBlocked": "The preview window could not open. Allow pop-ups for this site and try again."
+    "exitTeaching": "Exit teaching",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "illustrationUnavailable": "The illustration could not load",
+    "musicUnavailable": "The background music could not load"
   },
   "square": {
     "views": "{{count}} views",

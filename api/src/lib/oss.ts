@@ -38,6 +38,15 @@ export const getSignedUrl = (filePath: string, expires: number = 3600): string =
   });
 };
 
+export function getOssDownloadUrl(mediaUrl: URL, expires: number = 3600): string | null {
+  const objectPath = mediaUrl.searchParams.get('path')?.replace(/^\/+/, '');
+  if (!objectPath || objectPath.includes('..')) return null;
+
+  const signedUrl = new URL(getSignedUrl(objectPath, expires));
+  signedUrl.protocol = 'https:';
+  return signedUrl.href;
+}
+
 /**
  * 生成不带签名的文件路径（用于存储到数据库）
  * @param folder 文件夹名称

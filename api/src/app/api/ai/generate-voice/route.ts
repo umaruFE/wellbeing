@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { n8nClient } from '@/lib/n8n/client';
+import { audioFiles, mediaSubmissionFailure } from '@/lib/n8n/media';
 
 /**
  * N8N 语音合成路由
@@ -89,18 +90,15 @@ export async function POST(request: NextRequest) {
     });
 
     // 调用 N8N Workflow
-    const n8nResult = await n8nClient.call('gene-audio', n8nPayload);
+    const submitted = await n8nClient.submitMedia('gene-audio', n8nPayload);
 
-    console.log('[generate-voice] N8N 响应:', n8nResult);
+    const { executionId } = submitted;
 
     // 保存到数据库
     try {
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       const validUserId = (user_id && uuidRegex.test(user_id)) ? user_id : null;
       const validOrganizationId = (organization_id && uuidRegex.test(organization_id)) ? organization_id : null;
-
-      const n8nResultData = n8nResult as { executionId?: string; id?: string };
-      const executionId = n8nResultData.executionId || n8nResultData.id;
 
       await db.from('prompt_history').insert({
         user_id: validUserId,
@@ -121,10 +119,9 @@ export async function POST(request: NextRequest) {
     }
 
     // 返回结果
-    const n8nResultData = n8nResult as { executionId?: string; id?: string };
     return NextResponse.json({
       success: true,
-      executionId: n8nResultData.executionId || n8nResultData.id,
+      executionId,
       workflowType: 'voice',
       workflow: 'ai-voice-generation'
     }, { headers: corsHeaders() });
@@ -132,13 +129,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('[generate-voice] 生成失败:', error);
 
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : '生成失败',
-        details: error instanceof Error ? error.stack : null
-      },
-      { status: 500, headers: corsHeaders() }
-    );
+    return mediaSubmissionFailure(error, '配音生成失败，请重试。', corsHeaders());
   }
 }
 
@@ -182,27 +173,15 @@ export async function GET(request: NextRequest) {
       console.log('[generate-voice] 执行完成，获取音频资源...');
 
       try {
-        // 通过 get-resource webhook 获取资源
-        const resourceUrl = `${process.env.N8N_API_BASE_URL || 'http://117.50.218.161:5678'}/webhook/get-resource?execution_id=${executionId}`;
-        console.log('[generate-voice] 获取音频资源:', resourceUrl);
-
-        const resourceResponse = await fetch(resourceUrl, {
-          method: 'GET',
-          headers: {
-            'X-N8N-API-KEY': process.env.N8N_API_KEY || ''
-          }
-        });
-
-        const resourceData = await resourceResponse.json();
-        console.log('[generate-voice] 音频资源数据:', resourceData);
-
-        const audioUrl = resourceData?.url || resourceData?.audio_url || resourceData?.output?.url || resourceData?.data;
+        const resourceData = await n8nClient.call('get-resource', { execution_id: executionId }, { method: 'GET' });
+        const [file] = audioFiles(resourceData);
+        if (!file) throw new Error('配音工作流未返回音频文件');
 
         return NextResponse.json({
           success: true,
           status: 'completed',
-          url: audioUrl,
-          filename: resourceData?.filename
+          url: file.url,
+          filename: file.filename
         }, { headers: corsHeaders() });
 
       } catch (error) {
@@ -210,7 +189,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
           success: false,
           status: 'error',
-          error: '获取音频资源失败'
+          error: '未能取得生成的配音，请稍后重试。'
         }, { headers: corsHeaders() });
       }
 

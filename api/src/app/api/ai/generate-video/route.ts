@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { n8nClient } from '@/lib/n8n/client';
+import { mediaSubmissionFailure } from '@/lib/n8n/media';
+import { getOssDownloadUrl } from '@/lib/oss';
 import { authenticate } from '@/lib/auth';
 import { createGenerationTask } from '@/lib/background-tasks';
 
@@ -75,19 +77,27 @@ export async function POST(request: NextRequest) {
     });
 
     // 参数验证
-    if (!storyboard_images_filepath || !storyboard_prompts) {
+    if (!Array.isArray(storyboard_images_filepath) || !storyboard_images_filepath.length ||
+        !storyboard_images_filepath.every((path: unknown) => typeof path === 'string' && path.trim()) ||
+        !storyboard_prompts) {
       return NextResponse.json(
         { error: '缺少必要参数: storyboard_images_filepath 或 storyboard_prompts' },
         { status: 400, headers: corsHeaders() }
       );
     }
 
-    // 清理URL，去除空格
     const cleanStoryboardImages = storyboard_images_filepath.map((path: string) => path.trim());
+    // The video worker runs outside this app. Keep stable paths in the task and sign only its input.
+    const workflowImages = cleanStoryboardImages.map(path => path.startsWith('/api/media/oss?')
+      ? getOssDownloadUrl(new URL(path, request.url))
+      : path);
+    if (workflowImages.includes(null)) {
+      return NextResponse.json({ error: '分镜图片的存储路径无效' }, { status: 400, headers: corsHeaders() });
+    }
 
     // 准备 N8N 调用参数
     const n8nPayload = {
-      storyboard_images_filepath: cleanStoryboardImages,
+      storyboard_images_filepath: workflowImages,
       storyboard_prompts,
       video_width: video_width || 856,
       video_height: video_height || 480,
@@ -102,12 +112,8 @@ export async function POST(request: NextRequest) {
     });
 
     // 调用 N8N Workflow
-    const result = await n8nClient.call('gene-video', n8nPayload);
-
-    console.log('[generate-video] N8N 响应:', result);
-
-    const resultData = result as { executionId?: string; id?: string; status?: string; message?: string };
-    const executionId = resultData.executionId || resultData.id;
+    const submitted = await n8nClient.submitMedia('gene-video', n8nPayload);
+    const { executionId } = submitted;
     let backgroundTask = null;
 
     try {
@@ -120,8 +126,8 @@ export async function POST(request: NextRequest) {
         count: 1,
         related: course_title || '',
         provider: 'n8n',
-        externalTaskId: executionId || null,
-        statusUrl: executionId ? `/api/ai/video-status?executionId=${encodeURIComponent(executionId)}` : null,
+        externalTaskId: executionId,
+        statusUrl: `/api/ai/video-status?executionId=${encodeURIComponent(executionId)}`,
         input: {
           storyboard_images_filepath: cleanStoryboardImages,
           storyboard_prompts,
@@ -141,20 +147,14 @@ export async function POST(request: NextRequest) {
         executionId,
         backgroundTaskId: backgroundTask?.id || null,
         backgroundTask,
-        status: resultData.status || 'submitted',
-        message: resultData.message || '视频生成任务已提交'
+        status: submitted.status || 'submitted',
+        message: submitted.message || '视频生成任务已提交'
       }
     }, { headers: corsHeaders() });
 
   } catch (error) {
     console.error('[generate-video] 生成失败:', error);
 
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : '生成失败',
-        details: error instanceof Error ? error.stack : null
-      },
-      { status: 500, headers: corsHeaders() }
-    );
+    return mediaSubmissionFailure(error, '视频生成失败，请重试。', corsHeaders());
   }
 }

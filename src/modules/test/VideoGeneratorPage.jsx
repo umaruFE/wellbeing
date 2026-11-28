@@ -101,7 +101,7 @@ export const VideoGeneratorPage = () => {
           } else if (statusData.status === 'error') {
             setAudioResult(prev => ({ ...prev, status: 'error' }));
             setIsPollingAudio(false);
-            setAudioError(t('common.operationFailed'));
+            setAudioError(statusData.error || t('common.operationFailed'));
             return;
           }
         }

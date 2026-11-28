@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { n8nClient } from '@/lib/n8n/client';
+import { mediaSubmissionFailure } from '@/lib/n8n/media';
 import { persistComfyImagesInValue } from '@/lib/persistRemoteImage';
 
 /**
@@ -79,37 +80,15 @@ export async function POST(request: NextRequest) {
     });
 
     // 调用 N8N Workflow
-    const result = await n8nClient.call('gene-images', n8nPayload);
-
-    console.log('[generate-storyboard] N8N 响应:', result);
-
-    // 提取 executionId
-    const resultData = result as { executionId?: string; id?: string };
-    const executionId = resultData.executionId || resultData.id;
-
-    if (executionId) {
-      return NextResponse.json({
-        success: true,
-        data: {
-          executionId,
-          status: 'processing'
-        }
-      }, { headers: corsHeaders() });
-    } else {
-      throw new Error('Workflow调用失败：未返回executionId');
-    }
-
+    const { executionId } = await n8nClient.submitMedia('gene-images', n8nPayload);
+    return NextResponse.json({
+      success: true,
+      data: { executionId, status: 'processing' },
+    }, { headers: corsHeaders() });
   } catch (error) {
     console.error('[generate-storyboard] 分镜生成失败:', error);
 
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : '分镜生成失败',
-        details: error instanceof Error ? error.stack : null,
-        suggestion: '服务器可能正在启动中，请稍后重试'
-      },
-      { status: 500, headers: corsHeaders() }
-    );
+    return mediaSubmissionFailure(error, '分镜生成失败，请重试。', corsHeaders());
   }
 }
 

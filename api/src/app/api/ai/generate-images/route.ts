@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { authenticate } from '@/lib/auth';
 import { n8nClient } from '@/lib/n8n/client';
+import { mediaSubmissionFailure } from '@/lib/n8n/media';
 import { createGenerationTask } from '@/lib/background-tasks';
 import { getPrompt } from '@/prompts/registry';
 
@@ -130,18 +131,15 @@ export async function POST(request: NextRequest) {
     });
 
     // 5. 调用 N8N Workflow
-    const n8nResult = await n8nClient.call('ai-image-generation', n8nPayload);
+    const submitted = await n8nClient.submitMedia('ai-image-generation', n8nPayload);
 
-    console.log('[generate-images] N8N 响应:', n8nResult);
+    const { executionId } = submitted;
 
     // 6. 保存到数据库
     try {
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       const validUserId = (user_id && uuidRegex.test(user_id)) ? user_id : null;
       const validOrganizationId = (organization_id && uuidRegex.test(organization_id)) ? organization_id : null;
-
-      const n8nResultData = n8nResult as { executionId?: string; id?: string; comfyuiUrl?: string };
-      const executionId = n8nResultData.executionId || n8nResultData.id;
 
       await db.from('prompt_history').insert({
         user_id: validUserId,
@@ -162,11 +160,9 @@ export async function POST(request: NextRequest) {
     }
 
     // 7. 返回结果（包含 comfyuiUrl 让前端可以直接轮询）
-    const n8nResultData = n8nResult as { executionId?: string; id?: string; comfyuiUrl?: string };
-    const promptId = n8nResultData.executionId || n8nResultData.id;
-    const statusUrl = promptId
-      ? `/api/ai/task-status/${promptId}?useComfyUI=true${n8nResultData.comfyuiUrl ? `&apiUrl=${encodeURIComponent(n8nResultData.comfyuiUrl)}` : ''}`
-      : null;
+    const statusParams = new URLSearchParams({ useComfyUI: 'true' });
+    if (submitted.comfyuiUrl) statusParams.set('apiUrl', submitted.comfyuiUrl);
+    const statusUrl = `/api/ai/task-status/${encodeURIComponent(executionId)}?${statusParams}`;
     let backgroundTask = null;
 
     try {
@@ -179,7 +175,7 @@ export async function POST(request: NextRequest) {
         count: Number(count) || 1,
         related: course_title || '',
         provider: 'n8n',
-        externalTaskId: promptId || null,
+        externalTaskId: executionId,
         statusUrl,
         input: {
           workflow_type,
@@ -204,8 +200,8 @@ export async function POST(request: NextRequest) {
       tasks: [{
         type: workflow_type,
         name: character_name,
-        promptId,
-        apiUrl: n8nResultData.comfyuiUrl
+        promptId: executionId,
+        apiUrl: submitted.comfyuiUrl
       }],
       backgroundTaskId: backgroundTask?.id || null,
       backgroundTask,
@@ -216,12 +212,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('[generate-images] 调用失败:', error);
 
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : '生成失败',
-        details: error instanceof Error ? error.stack : null
-      },
-      { status: 500, headers: corsHeaders() }
-    );
+    return mediaSubmissionFailure(error, '图片生成失败，请重试。', corsHeaders());
   }
 }
